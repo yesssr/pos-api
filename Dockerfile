@@ -1,14 +1,15 @@
 ARG GO_VERSION=1
 FROM golang:${GO_VERSION}-bookworm as builder
 
-WORKDIR /usr/src/app/cmd/app
-COPY ./cmd/app . 
-RUN go mod download && go mod verify
+WORKDIR /usr/src/app
 COPY . .
-RUN go build -v -o /run-app .
 
+# install dependencies
+RUN go mod download && go mod verify
+
+# build executable dari cmd/app
+RUN go build -v -o /run-app ./cmd/app
 
 FROM debian:bookworm
-
 COPY --from=builder /run-app /usr/local/bin/
 CMD ["run-app"]
