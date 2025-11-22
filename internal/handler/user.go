@@ -22,9 +22,17 @@ func NewUserHandler(q *store.Queries) *UserHandler {
 	}
 }
 
-func (s *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var b CreateUserInput;
 	if !lib.ValidateJSON(w, r, &b) {
+		return
+	}
+	ctx := r.Context()
+	if _, err := h.queries.GetUserByUsername(ctx, b.Username); err == nil {
+		lib.SendErrorResponse(w, &lib.AppError{
+			Message: "Username already exists",
+			StatusCode: http.StatusBadRequest,
+		})
 		return
 	}
 
@@ -35,7 +43,7 @@ func (s *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		ImageUrl: "",
 	}
 
-	u, err := s.queries.CreateUser(r.Context(), args);
+	u, err := h.queries.CreateUser(ctx, args);
 	if err != nil {
 		lib.SendErrorResponse(w, err)
 		return
