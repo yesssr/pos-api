@@ -1,33 +1,33 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"pos-api/internal/config"
+	"pos-api/internal/handler"
+	"pos-api/internal/router"
+	"pos-api/internal/store"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 )
 
-type Response struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-	StatusCode int    `json:"status_code"`
-}
-
 func main() {
-	r := chi.NewRouter();
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("No .env file found, using system env")
+  }
+  ctx := context.Background();
+  db, err := config.NewPool(ctx);
+  if err != nil {
+		panic(err);
+	}
+	q := store.New(db);
+	h := handler.New(q);
+	r := router.New(h);
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		testResponse := Response{
-			Success:    true,
-			Message:    "API is working",
-			StatusCode: 200,
-		}
-		w.WriteHeader(testResponse.StatusCode);
-		w.Header().Set("Content-Type", "application/json");
-		json.NewEncoder(w).Encode(testResponse);
-	});
+	port := os.Getenv("PORT")
 
-	fmt.Println("Starting server on port 8080");
-	http.ListenAndServe(":8080", r);
+	fmt.Println("Starting server on port", port)
+	http.ListenAndServe(":"+port, r);
 }
