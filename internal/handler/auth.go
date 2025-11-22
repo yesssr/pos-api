@@ -58,5 +58,5 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		lib.SendErrorResponse(w, err);
 		return;
 	}
-	lib.SendResponse(w, true, http.StatusOK, "Login successful", nil, nil, &c);
+	lib.SendResponse(w, http.StatusOK, "Login successful", nil, nil, &c);
 }

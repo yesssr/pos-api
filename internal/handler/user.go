@@ -28,6 +28,11 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := lib.ValidateStruct(&b); err != nil {
+		lib.SendErrorResponse(w, err)
+		return
+	}
+
 	ctx := r.Context()
 	if _, err := h.queries.GetUserByUsername(ctx, b.Username); err == nil {
 		lib.SendErrorResponse(w, &lib.AppError{
@@ -50,5 +55,5 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	lib.SendResponse(w, true, http.StatusCreated, "Successfully added user", u, nil, nil)
+	lib.SendResponse(w, http.StatusCreated, "Successfully added user", u, nil, nil)
 }
