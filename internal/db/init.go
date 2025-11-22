@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"pos-api-go/internal/lib"
+	"pos-api/internal/lib"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
