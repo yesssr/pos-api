@@ -27,6 +27,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if !lib.ValidateJSON(w, r, &b) {
 		return
 	}
+
 	ctx := r.Context()
 	if _, err := h.queries.GetUserByUsername(ctx, b.Username); err == nil {
 		lib.SendErrorResponse(w, &lib.AppError{
