@@ -8,7 +8,7 @@ import (
 
 var TokenAuth *jwtauth.JWTAuth;
 
-func init() {
+func InitJWT() {
 	secretKey := os.Getenv("SECRET_KEY")
 	TokenAuth = jwtauth.New("HS256", []byte(secretKey), nil)
 }
