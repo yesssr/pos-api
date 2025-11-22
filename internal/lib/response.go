@@ -22,7 +22,6 @@ type Response struct {
 
 func SendResponse(
 	w http.ResponseWriter,
-	success bool,
 	statusCode int,
 	message string,
 	data any,
@@ -30,7 +29,7 @@ func SendResponse(
 	credentials *string,
 ) {
 	response := Response{
-		Success:     success,
+		Success:     true,
 		StatusCode:  statusCode,
 		Message:     message,
 		Data:        data,
@@ -40,26 +39,4 @@ func SendResponse(
 	w.Header().Set("Content-Type", "application/json");
 	w.WriteHeader(statusCode);
 	json.NewEncoder(w).Encode(response);
-}
-
-type AppError struct {
-	Message string `json:"message"`
-	StatusCode int `json:"status_code"`
-}
-
-func (e *AppError) Error() string {
-	return e.Message;
-}
-
-func SendErrorResponse(
-	w http.ResponseWriter,
-	err error,
-) {
-	statusCode := http.StatusInternalServerError;
-
-	if err, ok := err.(*AppError); ok {
-		statusCode = err.StatusCode;
-	}
-
-	SendResponse(w, false, statusCode, err.Error(), nil, nil, nil)
 }
