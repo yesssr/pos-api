@@ -9,7 +9,7 @@ import (
 type CreateUserInput struct {
   Username string `json:"username" validate:"required,min=3"`
   Password string `json:"password" validate:"required,min=6"`
-  Role     store.Roles `json:"role" validate:"required,oneof=admin kasir"`
+  Role     store.Roles `json:"role" validate:"required,oneof=admin cashier"`
 }
 
 type UserHandler struct {
@@ -42,9 +42,11 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pass, _ := lib.HashPassword(b.Password);
+
 	args := store.CreateUserParams{
 		Username: b.Username,
-		Password: b.Password,
+		Password: pass,
 		Role:     b.Role,
 		ImageUrl: "",
 	}
