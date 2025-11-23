@@ -39,6 +39,10 @@ func main() {
     log.Fatalf("migrate init: %v", err)
   }
 
+  if err := m.Down(); err != nil && err.Error() != "no change" {
+    log.Fatalf("migrate down: %v", err)
+  }
+
   if err := m.Up(); err != nil && err.Error() != "no change" {
     log.Fatalf("migrate up: %v", err)
   }

@@ -1,8 +1,8 @@
-CREATE TABLE barang (
+CREATE TABLE products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    nama VARCHAR(100) NOT NULL,
-    harga NUMERIC(12,2) NOT NULL,
-    stok INT NOT NULL DEFAULT 0,
+    name VARCHAR(100) NOT NULL,
+    price NUMERIC(12,2) NOT NULL,
+    stock INT NOT NULL DEFAULT 0,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     image_url TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

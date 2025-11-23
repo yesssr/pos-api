@@ -11,91 +11,91 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type PembayaranMetode string
+type PaymentMethod string
 
 const (
-	PembayaranMetodeCash   PembayaranMetode = "cash"
-	PembayaranMetodeQris   PembayaranMetode = "qris"
-	PembayaranMetodeDebit  PembayaranMetode = "debit"
-	PembayaranMetodeKredit PembayaranMetode = "kredit"
+	PaymentMethodCash   PaymentMethod = "cash"
+	PaymentMethodQris   PaymentMethod = "qris"
+	PaymentMethodDebit  PaymentMethod = "debit"
+	PaymentMethodKredit PaymentMethod = "kredit"
 )
 
-func (e *PembayaranMetode) Scan(src interface{}) error {
+func (e *PaymentMethod) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = PembayaranMetode(s)
+		*e = PaymentMethod(s)
 	case string:
-		*e = PembayaranMetode(s)
+		*e = PaymentMethod(s)
 	default:
-		return fmt.Errorf("unsupported scan type for PembayaranMetode: %T", src)
+		return fmt.Errorf("unsupported scan type for PaymentMethod: %T", src)
 	}
 	return nil
 }
 
-type NullPembayaranMetode struct {
-	PembayaranMetode PembayaranMetode `json:"pembayaran_metode"`
-	Valid            bool             `json:"valid"` // Valid is true if PembayaranMetode is not NULL
+type NullPaymentMethod struct {
+	PaymentMethod PaymentMethod `json:"payment_method"`
+	Valid         bool          `json:"valid"` // Valid is true if PaymentMethod is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullPembayaranMetode) Scan(value interface{}) error {
+func (ns *NullPaymentMethod) Scan(value interface{}) error {
 	if value == nil {
-		ns.PembayaranMetode, ns.Valid = "", false
+		ns.PaymentMethod, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.PembayaranMetode.Scan(value)
+	return ns.PaymentMethod.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullPembayaranMetode) Value() (driver.Value, error) {
+func (ns NullPaymentMethod) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.PembayaranMetode), nil
+	return string(ns.PaymentMethod), nil
 }
 
-type PembayaranStatus string
+type PaymentStatus string
 
 const (
-	PembayaranStatusPending PembayaranStatus = "pending"
-	PembayaranStatusLunas   PembayaranStatus = "lunas"
-	PembayaranStatusGagal   PembayaranStatus = "gagal"
+	PaymentStatusPending PaymentStatus = "pending"
+	PaymentStatusPaid    PaymentStatus = "paid"
+	PaymentStatusFailed  PaymentStatus = "failed"
 )
 
-func (e *PembayaranStatus) Scan(src interface{}) error {
+func (e *PaymentStatus) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = PembayaranStatus(s)
+		*e = PaymentStatus(s)
 	case string:
-		*e = PembayaranStatus(s)
+		*e = PaymentStatus(s)
 	default:
-		return fmt.Errorf("unsupported scan type for PembayaranStatus: %T", src)
+		return fmt.Errorf("unsupported scan type for PaymentStatus: %T", src)
 	}
 	return nil
 }
 
-type NullPembayaranStatus struct {
-	PembayaranStatus PembayaranStatus `json:"pembayaran_status"`
-	Valid            bool             `json:"valid"` // Valid is true if PembayaranStatus is not NULL
+type NullPaymentStatus struct {
+	PaymentStatus PaymentStatus `json:"payment_status"`
+	Valid         bool          `json:"valid"` // Valid is true if PaymentStatus is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullPembayaranStatus) Scan(value interface{}) error {
+func (ns *NullPaymentStatus) Scan(value interface{}) error {
 	if value == nil {
-		ns.PembayaranStatus, ns.Valid = "", false
+		ns.PaymentStatus, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.PembayaranStatus.Scan(value)
+	return ns.PaymentStatus.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullPembayaranStatus) Value() (driver.Value, error) {
+func (ns NullPaymentStatus) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.PembayaranStatus), nil
+	return string(ns.PaymentStatus), nil
 }
 
 type Roles string
@@ -140,43 +140,43 @@ func (ns NullRoles) Value() (driver.Value, error) {
 	return string(ns.Roles), nil
 }
 
-type Barang struct {
+type Customer struct {
 	ID        pgtype.UUID        `json:"id"`
-	Nama      string             `json:"nama"`
-	Harga     pgtype.Numeric     `json:"harga"`
-	Stok      int32              `json:"stok"`
+	Name      string             `json:"name"`
+	Phone     pgtype.Text        `json:"phone"`
+	Address   pgtype.Text        `json:"address"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type DetailTransaction struct {
+	ID            pgtype.UUID    `json:"id"`
+	IDTransaction pgtype.UUID    `json:"id_transaction"`
+	IDProduct     pgtype.UUID    `json:"id_product"`
+	Qty           int32          `json:"qty"`
+	Price         pgtype.Numeric `json:"price"`
+	Subtotal      pgtype.Numeric `json:"subtotal"`
+}
+
+type Product struct {
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	Price     pgtype.Numeric     `json:"price"`
+	Stock     int32              `json:"stock"`
 	IsActive  bool               `json:"is_active"`
 	ImageUrl  string             `json:"image_url"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }
 
-type DetailPenjualan struct {
-	ID                 pgtype.UUID    `json:"id"`
-	IDPenjualan        pgtype.UUID    `json:"id_penjualan"`
-	IDBarang           pgtype.UUID    `json:"id_barang"`
-	Jumlah             int32          `json:"jumlah"`
-	HargaSaatTransaksi pgtype.Numeric `json:"harga_saat_transaksi"`
-	Subtotal           pgtype.Numeric `json:"subtotal"`
-}
-
-type Pelanggan struct {
-	ID        pgtype.UUID        `json:"id"`
-	Nama      string             `json:"nama"`
-	NoHp      pgtype.Text        `json:"no_hp"`
-	Alamat    pgtype.Text        `json:"alamat"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-}
-
-type Penjualan struct {
-	ID                 pgtype.UUID        `json:"id"`
-	IDUser             pgtype.UUID        `json:"id_user"`
-	IDPelanggan        pgtype.UUID        `json:"id_pelanggan"`
-	Tanggal            pgtype.Timestamptz `json:"tanggal"`
-	Total              pgtype.Numeric     `json:"total"`
-	MetodePembayaran   PembayaranMetode   `json:"metode_pembayaran"`
-	StatusPembayaran   PembayaranStatus   `json:"status_pembayaran"`
-	IDTransaksiGateway pgtype.Text        `json:"id_transaksi_gateway"`
+type Transaction struct {
+	ID                   pgtype.UUID        `json:"id"`
+	IDUser               pgtype.UUID        `json:"id_user"`
+	IDCustomer           pgtype.UUID        `json:"id_customer"`
+	Date                 pgtype.Timestamptz `json:"date"`
+	Total                pgtype.Numeric     `json:"total"`
+	PaymentMethod        PaymentMethod      `json:"payment_method"`
+	PaymentStatus        PaymentStatus      `json:"payment_status"`
+	IDTransactionGateway pgtype.Text        `json:"id_transaction_gateway"`
 }
 
 type User struct {
