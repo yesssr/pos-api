@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/go-chi/jwtauth/v5"
@@ -32,4 +33,24 @@ func CreateToken(p Payload) (string, error) {
 	}
 
 	return tokenString, nil;
+}
+
+func ExtractPayload(r *http.Request) (*Payload, error) {
+	token, claims, err := jwtauth.FromContext(r.Context());
+	if err != nil || token == nil || claims == nil {
+    return nil, &AppError{
+      Message: "Unauthorized",
+     	StatusCode: http.StatusUnauthorized,
+    };
+  }
+
+  id, _ := claims["id"].(string);
+  u, _ := claims["username"].(string);
+  role, _ := claims["role"].(string);
+
+  return &Payload{
+    Id: id,
+    Username: u,
+    Role: role,
+  }, nil
 }
