@@ -32,15 +32,8 @@ AND is_active = true;
 UPDATE users SET
   username = $2,
   role = $3,
-  image_url = $4,
-  updated_at = NOW()
-WHERE id = $1
-AND is_active = true
-RETURNING *;
-
--- name: UpdateUserPass :one
-UPDATE users SET
-  password = $2,
+  is_active = COALESCE($4, is_active),
+  image_url = $5,
   updated_at = NOW()
 WHERE id = $1
 AND is_active = true
@@ -61,3 +54,8 @@ SELECT
 FROM users
 WHERE username = $1
 AND is_active = true;
+
+-- name: CountUsers :one
+SELECT COUNT(*) AS count
+FROM users
+WHERE is_active = true;

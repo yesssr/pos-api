@@ -10,7 +10,7 @@ INSERT INTO transactions (
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
--- name: ListTransaction :many
+-- name: ListTransactions :many
 SELECT
   t.id,
   t.id_user,
@@ -28,3 +28,8 @@ JOIN users u ON t.id_user = u.id
 WHERE date BETWEEN $1 AND $2
 ORDER BY t.date DESC
 LIMIT $3 OFFSET $4;
+
+-- name: CountTransactions :one
+SELECT COUNT(*) AS count
+FROM transactions
+WHERE is_active = true;

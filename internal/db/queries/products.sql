@@ -9,6 +9,7 @@ UPDATE products SET
   price = $3,
   stock = $4,
   image_url = $5,
+  is_active = $6,
   updated_at = NOW()
 WHERE id = $1
 RETURNING *;
@@ -18,7 +19,7 @@ DELETE FROM products
 WHERE id = $1
 RETURNING *;
 
--- name: ListProductAsc :many
+-- name: ListProducts :many
 SELECT
   id,
   name,
@@ -27,17 +28,10 @@ SELECT
   image_url,
   is_active
 FROM products
-ORDER BY created_at ASC
+ORDER BY created_at $3
 LIMIT $1 OFFSET $2;
 
--- name: ListProductDesc :many
-SELECT
-  id,
-  name,
-  price,
-  stock,
-  image_url,
-  is_active
+-- name: CountProducts :one
+SELECT COUNT(*) AS count
 FROM products
-ORDER BY created_at DESC
-LIMIT $1 OFFSET $2;
+WHERE is_active = true;

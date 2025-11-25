@@ -11,7 +11,7 @@ UPDATE customers SET
 WHERE id = $1
 RETURNING *;
 
--- name: ListCustomerAsc :many
+-- name: ListCustomer :many
 SELECT
   id,
   name,
@@ -19,18 +19,7 @@ SELECT
   address,
   created_at
 FROM customers
-ORDER BY created_at ASC
-LIMIT $1 OFFSET $2;
-
--- name: ListCustomerDesc :many
-SELECT
-  id,
-  name,
-  phone,
-  address,
-  created_at
-FROM customers
-ORDER BY created_at DESC
+ORDER BY created_at $3
 LIMIT $1 OFFSET $2;
 
 -- name: GetCustomerByID :one
@@ -47,3 +36,8 @@ WHERE id = $1;
 DELETE FROM customers
 WHERE id = $1
 RETURNING *;
+
+-- name: CountCustomers :one
+SELECT COUNT(*) AS count
+FROM customers
+WHERE is_active = true;
