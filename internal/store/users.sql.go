@@ -11,6 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countUsers = `-- name: CountUsers :one
+SELECT COUNT(*) AS count
+FROM users
+WHERE is_active = true
+`
+
+func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countUsers)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
   username,
@@ -19,7 +32,7 @@ INSERT INTO users (
   image_url
 )
 VALUES ($1, $2, $3, $4)
-RETURNING id, username, password, role, image_url, is_active
+RETURNING id, username, password, role, image_url, is_active, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -44,6 +57,8 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Role,
 		&i.ImageUrl,
 		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -51,7 +66,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 const deleteUser = `-- name: DeleteUser :one
 DELETE FROM users
 WHERE id = $1
-RETURNING id, username, password, role, image_url, is_active
+RETURNING id, username, password, role, image_url, is_active, created_at, updated_at
 `
 
 func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) (User, error) {
@@ -64,6 +79,8 @@ func (q *Queries) DeleteUser(ctx context.Context, id pgtype.UUID) (User, error) 
 		&i.Role,
 		&i.ImageUrl,
 		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -183,17 +200,19 @@ const updateUser = `-- name: UpdateUser :one
 UPDATE users SET
   username = $2,
   role = $3,
-  image_url = $4,
+  is_active = COALESCE($4, is_active),
+  image_url = $5,
   updated_at = NOW()
 WHERE id = $1
 AND is_active = true
-RETURNING id, username, password, role, image_url, is_active
+RETURNING id, username, password, role, image_url, is_active, created_at, updated_at
 `
 
 type UpdateUserParams struct {
 	ID       pgtype.UUID `json:"id"`
 	Username string      `json:"username"`
 	Role     Roles       `json:"role"`
+	IsActive pgtype.Bool `json:"is_active"`
 	ImageUrl string      `json:"image_url"`
 }
 
@@ -202,6 +221,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.ID,
 		arg.Username,
 		arg.Role,
+		arg.IsActive,
 		arg.ImageUrl,
 	)
 	var i User
@@ -212,34 +232,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.Role,
 		&i.ImageUrl,
 		&i.IsActive,
-	)
-	return i, err
-}
-
-const updateUserPass = `-- name: UpdateUserPass :one
-UPDATE users SET
-  password = $2,
-  updated_at = NOW()
-WHERE id = $1
-AND is_active = true
-RETURNING id, username, password, role, image_url, is_active
-`
-
-type UpdateUserPassParams struct {
-	ID       pgtype.UUID `json:"id"`
-	Password string      `json:"password"`
-}
-
-func (q *Queries) UpdateUserPass(ctx context.Context, arg UpdateUserPassParams) (User, error) {
-	row := q.db.QueryRow(ctx, updateUserPass, arg.ID, arg.Password)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.Username,
-		&i.Password,
-		&i.Role,
-		&i.ImageUrl,
-		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

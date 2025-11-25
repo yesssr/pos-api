@@ -11,6 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countProducts = `-- name: CountProducts :one
+SELECT COUNT(*) AS count
+FROM products
+WHERE is_active = true
+`
+
+func (q *Queries) CountProducts(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countProducts)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createProduct = `-- name: CreateProduct :one
 INSERT INTO products (name, price, stock, image_url)
 VALUES ($1, $2, $3, $4)
@@ -67,7 +80,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, id pgtype.UUID) (Product, e
 	return i, err
 }
 
-const listProductAsc = `-- name: ListProductAsc :many
+const listProducts = `-- name: ListProducts :many
 SELECT
   id,
   name,
@@ -76,16 +89,17 @@ SELECT
   image_url,
   is_active
 FROM products
-ORDER BY created_at ASC
+ORDER BY created_at $3
 LIMIT $1 OFFSET $2
 `
 
-type ListProductAscParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+type ListProductsParams struct {
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
+	Column3 interface{} `json:"column_3"`
 }
 
-type ListProductAscRow struct {
+type ListProductsRow struct {
 	ID       pgtype.UUID    `json:"id"`
 	Name     string         `json:"name"`
 	Price    pgtype.Numeric `json:"price"`
@@ -94,69 +108,15 @@ type ListProductAscRow struct {
 	IsActive bool           `json:"is_active"`
 }
 
-func (q *Queries) ListProductAsc(ctx context.Context, arg ListProductAscParams) ([]ListProductAscRow, error) {
-	rows, err := q.db.Query(ctx, listProductAsc, arg.Limit, arg.Offset)
+func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error) {
+	rows, err := q.db.Query(ctx, listProducts, arg.Limit, arg.Offset, arg.Column3)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListProductAscRow
+	var items []ListProductsRow
 	for rows.Next() {
-		var i ListProductAscRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Price,
-			&i.Stock,
-			&i.ImageUrl,
-			&i.IsActive,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listProductDesc = `-- name: ListProductDesc :many
-SELECT
-  id,
-  name,
-  price,
-  stock,
-  image_url,
-  is_active
-FROM products
-ORDER BY created_at DESC
-LIMIT $1 OFFSET $2
-`
-
-type ListProductDescParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
-}
-
-type ListProductDescRow struct {
-	ID       pgtype.UUID    `json:"id"`
-	Name     string         `json:"name"`
-	Price    pgtype.Numeric `json:"price"`
-	Stock    int32          `json:"stock"`
-	ImageUrl string         `json:"image_url"`
-	IsActive bool           `json:"is_active"`
-}
-
-func (q *Queries) ListProductDesc(ctx context.Context, arg ListProductDescParams) ([]ListProductDescRow, error) {
-	rows, err := q.db.Query(ctx, listProductDesc, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListProductDescRow
-	for rows.Next() {
-		var i ListProductDescRow
+		var i ListProductsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -181,6 +141,7 @@ UPDATE products SET
   price = $3,
   stock = $4,
   image_url = $5,
+  is_active = $6,
   updated_at = NOW()
 WHERE id = $1
 RETURNING id, name, price, stock, is_active, image_url, created_at, updated_at
@@ -192,6 +153,7 @@ type UpdateProductParams struct {
 	Price    pgtype.Numeric `json:"price"`
 	Stock    int32          `json:"stock"`
 	ImageUrl string         `json:"image_url"`
+	IsActive bool           `json:"is_active"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
@@ -201,6 +163,7 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		arg.Price,
 		arg.Stock,
 		arg.ImageUrl,
+		arg.IsActive,
 	)
 	var i Product
 	err := row.Scan(

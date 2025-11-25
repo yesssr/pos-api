@@ -101,8 +101,8 @@ func (ns NullPaymentStatus) Value() (driver.Value, error) {
 type Roles string
 
 const (
-	RolesAdmin Roles = "admin"
-	RolesUser  Roles = "user"
+	RolesAdmin   Roles = "admin"
+	RolesCashier Roles = "cashier"
 )
 
 func (e *Roles) Scan(src interface{}) error {
@@ -177,13 +177,17 @@ type Transaction struct {
 	PaymentMethod        PaymentMethod      `json:"payment_method"`
 	PaymentStatus        PaymentStatus      `json:"payment_status"`
 	IDTransactionGateway pgtype.Text        `json:"id_transaction_gateway"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
 }
 
 type User struct {
-	ID       pgtype.UUID `json:"id"`
-	Username string      `json:"username"`
-	Password string      `json:"password"`
-	Role     Roles       `json:"role"`
-	ImageUrl string      `json:"image_url"`
-	IsActive pgtype.Bool `json:"is_active"`
+	ID        pgtype.UUID        `json:"id"`
+	Username  string             `json:"username"`
+	Password  string             `json:"password"`
+	Role      Roles              `json:"role"`
+	ImageUrl  string             `json:"image_url"`
+	IsActive  pgtype.Bool        `json:"is_active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 }

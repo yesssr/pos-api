@@ -11,6 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countTransactions = `-- name: CountTransactions :one
+SELECT COUNT(*) AS count
+FROM transactions
+WHERE is_active = true
+`
+
+func (q *Queries) CountTransactions(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countTransactions)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createTransaction = `-- name: CreateTransaction :one
 INSERT INTO transactions (
   id_user,
@@ -21,7 +34,7 @@ INSERT INTO transactions (
   id_transaction_gateway
 )
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, id_user, id_customer, date, total, payment_method, payment_status, id_transaction_gateway
+RETURNING id, id_user, id_customer, date, total, payment_method, payment_status, id_transaction_gateway, created_at, updated_at
 `
 
 type CreateTransactionParams struct {
@@ -52,11 +65,13 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		&i.PaymentMethod,
 		&i.PaymentStatus,
 		&i.IDTransactionGateway,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const listTransaction = `-- name: ListTransaction :many
+const listTransactions = `-- name: ListTransactions :many
 SELECT
   t.id,
   t.id_user,
@@ -76,14 +91,14 @@ ORDER BY t.date DESC
 LIMIT $3 OFFSET $4
 `
 
-type ListTransactionParams struct {
+type ListTransactionsParams struct {
 	Date   pgtype.Timestamptz `json:"date"`
 	Date_2 pgtype.Timestamptz `json:"date_2"`
 	Limit  int32              `json:"limit"`
 	Offset int32              `json:"offset"`
 }
 
-type ListTransactionRow struct {
+type ListTransactionsRow struct {
 	ID                   pgtype.UUID        `json:"id"`
 	IDUser               pgtype.UUID        `json:"id_user"`
 	IDCustomer           pgtype.UUID        `json:"id_customer"`
@@ -96,8 +111,8 @@ type ListTransactionRow struct {
 	Cashier              string             `json:"cashier"`
 }
 
-func (q *Queries) ListTransaction(ctx context.Context, arg ListTransactionParams) ([]ListTransactionRow, error) {
-	rows, err := q.db.Query(ctx, listTransaction,
+func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]ListTransactionsRow, error) {
+	rows, err := q.db.Query(ctx, listTransactions,
 		arg.Date,
 		arg.Date_2,
 		arg.Limit,
@@ -107,9 +122,9 @@ func (q *Queries) ListTransaction(ctx context.Context, arg ListTransactionParams
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListTransactionRow
+	var items []ListTransactionsRow
 	for rows.Next() {
-		var i ListTransactionRow
+		var i ListTransactionsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.IDUser,

@@ -11,6 +11,19 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countCustomers = `-- name: CountCustomers :one
+SELECT COUNT(*) AS count
+FROM customers
+WHERE is_active = true
+`
+
+func (q *Queries) CountCustomers(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countCustomers)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createCustomer = `-- name: CreateCustomer :one
 INSERT INTO customers (name, phone, address)
 VALUES ($1, $2, $3)
@@ -79,7 +92,7 @@ func (q *Queries) GetCustomerByID(ctx context.Context, id pgtype.UUID) (Customer
 	return i, err
 }
 
-const listCustomerAsc = `-- name: ListCustomerAsc :many
+const listCustomer = `-- name: ListCustomer :many
 SELECT
   id,
   name,
@@ -87,60 +100,18 @@ SELECT
   address,
   created_at
 FROM customers
-ORDER BY created_at ASC
+ORDER BY created_at $3
 LIMIT $1 OFFSET $2
 `
 
-type ListCustomerAscParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+type ListCustomerParams struct {
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
+	Column3 interface{} `json:"column_3"`
 }
 
-func (q *Queries) ListCustomerAsc(ctx context.Context, arg ListCustomerAscParams) ([]Customer, error) {
-	rows, err := q.db.Query(ctx, listCustomerAsc, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Customer
-	for rows.Next() {
-		var i Customer
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Phone,
-			&i.Address,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listCustomerDesc = `-- name: ListCustomerDesc :many
-SELECT
-  id,
-  name,
-  phone,
-  address,
-  created_at
-FROM customers
-ORDER BY created_at DESC
-LIMIT $1 OFFSET $2
-`
-
-type ListCustomerDescParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
-}
-
-func (q *Queries) ListCustomerDesc(ctx context.Context, arg ListCustomerDescParams) ([]Customer, error) {
-	rows, err := q.db.Query(ctx, listCustomerDesc, arg.Limit, arg.Offset)
+func (q *Queries) ListCustomer(ctx context.Context, arg ListCustomerParams) ([]Customer, error) {
+	rows, err := q.db.Query(ctx, listCustomer, arg.Limit, arg.Offset, arg.Column3)
 	if err != nil {
 		return nil, err
 	}
