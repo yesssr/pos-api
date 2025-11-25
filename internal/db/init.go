@@ -39,6 +39,17 @@ func main() {
     log.Fatalf("migrate init: %v", err)
   }
 
+  version, dirty, err := m.Version()
+	if err != nil && err != migrate.ErrNilVersion {
+		log.Fatalf("migrate version: %v", err)
+	}
+
+	if dirty {
+		if err := m.Force(int(version)); err != nil {
+			log.Fatalf("migrate force: %v", err)
+		}
+	}
+
   if err := m.Down(); err != nil && err.Error() != "no change" {
     log.Fatalf("migrate down: %v", err)
   }
