@@ -1,15 +1,20 @@
 package handler
 
-import "pos-api/internal/store"
+import (
+	"pos-api/internal/store"
+
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+)
 
 type Handler struct {
-	Auth *AuthHandler
-	User *UserHandler
+	R2Client *s3.Client;
+	Auth *AuthHandler;
+	User *UserHandler;
 }
 
-func New(q *store.Queries) *Handler {
+func New(q *store.Queries, r *s3.Client) *Handler {
 	return &Handler{
 		Auth: NewAuthHandler(q),
-		User: NewUserHandler(q),
+		User: NewUserHandler(q, r),
 	}
 }

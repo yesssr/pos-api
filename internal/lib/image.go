@@ -2,56 +2,119 @@ package lib
 
 import (
 	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-func SaveImageToCloud(imageData []byte) (string, error) {
-  var body bytes.Buffer
-  writer := multipart.NewWriter(&body)
+func saveImageToCloud(ctx context.Context, client *s3.Client, bucket string, dir string, key string, imageData []byte) error {
+  k := fmt.Sprintf("%s/%s", dir, key);
+	_, err := client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(k),
+		Body:   bytes.NewReader(imageData),
+	});
 
-  part, err := writer.CreateFormFile("image", "upload.jpg")
-  if err != nil {
-      return "", err
-  }
-  part.Write(imageData)
-  writer.Close()
+	return err;
+}
 
-  req, err := http.NewRequest("POST", "https://api.imgur.com/3/image", &body)
-  if err != nil {
-    return "", err
-  }
-  req.Header.Set("Content-Type", writer.FormDataContentType())
-  req.Header.Set("Authorization", "Client-ID "+os.Getenv("IMGUR_CLIENT_ID"))
+func DeleteImageFromCloud(ctx context.Context, client *s3.Client, bucket string, dir string, key string) error {
+	k := fmt.Sprintf("%s/%s", dir, key);
+	_, err := client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(k),
+	});
 
-  resp, err := http.DefaultClient.Do(req)
-  if err != nil {
-    return "", err
-  }
-  defer resp.Body.Close()
+	return err;
+}
 
-  respBody, err := io.ReadAll(resp.Body)
-  if err != nil {
-    return "", err
-  }
+func validateImgType(b []byte) error {
+	allowedTypes := map[string]bool{
+		"image/jpeg": true,
+		"image/jpg":  true,
+		"image/png":  true,
+		"image/gif":  true,
+		"image/jfif": true,
+	}
 
-  if resp.StatusCode != http.StatusOK {
-    return "", fmt.Errorf("upload failed: %s", respBody)
-  }
+	contentType := http.DetectContentType(b);
 
-  var result struct {
-      Data struct {
-          Link string `json:"link"`
-      } `json:"data"`
-  }
+	if !allowedTypes[contentType] {
+		return &AppError{
+			Message: fmt.Sprintf("invalid file type: %s. Only JPG, PNG, GIF allowed", contentType),
+			StatusCode: http.StatusBadRequest,
+		}
+	}
 
-  if err := json.Unmarshal(respBody, &result); err != nil {
-      return "", err
-  }
+	return nil;
+}
+const MaxSize = 10 << 20
+func UploadHandler(r *http.Request, client *s3.Client, dir string, key string, keyDel *string) (string, error) {
+	r.ParseMultipartForm(MaxSize)
+	defaultURL := "http://default.png";
 
-  return result.Data.Link, nil
+	mf := r.MultipartForm
+	if mf == nil || mf.File == nil {
+	  return defaultURL, nil
+	}
+
+	files := mf.File["image"]
+	if len(files) == 0 {
+	  return defaultURL, nil
+	}
+
+	fh := files[0]
+	file, err := fh.Open()
+	if err != nil {
+	  return "", &AppError{
+	  	Message: "Could not open file",
+	   	StatusCode: http.StatusBadRequest,
+	  }
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+
+	if err != nil {
+	  return "", &AppError{
+	  	Message: "Could not read file",
+	  	StatusCode: http.StatusInternalServerError,
+	  }
+	}
+
+	if len(data) > MaxSize {
+    return "", &AppError{
+    	Message: "file too large",
+     	StatusCode: http.StatusBadRequest,
+    }
+}
+
+	if err := validateImgType(data); err != nil {
+	  return "", err
+	}
+
+	filename := key + "_" + GenerateUniqueNumber();
+	bucket := os.Getenv("R2_BUCKET_NAME");
+	if err := saveImageToCloud(r.Context(), client, bucket, dir, filename, data); err != nil {
+	  return "", &AppError{
+	  	Message: "Could not upload image to cloud",
+	   	StatusCode: http.StatusInternalServerError,
+	  }
+	}
+
+	if keyDel != nil {
+		err := DeleteImageFromCloud(r.Context(), client, bucket, dir, *keyDel);
+		if err != nil {
+			fmt.Println("Warning: failed to delete old image:", err)
+		}
+	}
+
+	accountId := os.Getenv("R2_ACCOUNT_ID");
+	url := fmt.Sprintf("https://%s.r2.cloudflarestorage.com/%s/%s", accountId, dir, filename)
+	return url, nil
 }
