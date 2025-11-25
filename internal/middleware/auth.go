@@ -18,7 +18,7 @@ func Auth(next http.Handler) http.Handler {
   	p, err := lib.ExtractPayload(r);
 
    	if err != nil {
-    	lib.SendErrorResponse(w, err);
+    	lib.SendErrorResponse(w, err, nil);
      	return;
     }
 
@@ -45,14 +45,14 @@ func IsAdmin(next http.Handler) http.Handler {
   hfn := func(w http.ResponseWriter, r *http.Request) {
     p, err := GetUserPayload(r);
     if err != nil {
-			lib.SendErrorResponse(w, err)
+			lib.SendErrorResponse(w, err, nil)
     }
 
     if p.Role != "admin" {
     	lib.SendErrorResponse(w, &lib.AppError{
 		 		Message: "Forbidden",
 			 	StatusCode: http.StatusForbidden,
-     	})
+     	}, nil);
 			return;
     }
     next.ServeHTTP(w, r);
@@ -71,7 +71,7 @@ func IdCtx(next http.Handler) http.Handler {
 			lib.SendErrorResponse(w, &lib.AppError{
 				Message: "Invalid ID format",
 				StatusCode: http.StatusBadRequest,
-			})
+			}, nil);
 			return;
 		}
 
