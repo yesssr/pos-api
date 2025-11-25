@@ -12,12 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-func saveImageToCloud(ctx context.Context, client *s3.Client, bucket string, dir string, key string, imageData []byte) error {
+func saveImageToCloud(ctx context.Context, client *s3.Client, bucket, dir, key, contentType string, imageData []byte) error {
   k := fmt.Sprintf("%s/%s", dir, key);
 	_, err := client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(k),
 		Body:   bytes.NewReader(imageData),
+		ContentType: aws.String(contentType),
 	});
 
 	return err;
@@ -33,7 +34,7 @@ func DeleteImageFromCloud(ctx context.Context, client *s3.Client, bucket string,
 	return err;
 }
 
-func validateImgType(b []byte) error {
+func validateImgType(b []byte) (string, error) {
 	allowedTypes := map[string]bool{
 		"image/jpeg": true,
 		"image/jpg":  true,
@@ -45,27 +46,25 @@ func validateImgType(b []byte) error {
 	contentType := http.DetectContentType(b);
 
 	if !allowedTypes[contentType] {
-		return &AppError{
+		return "", &AppError{
 			Message: fmt.Sprintf("invalid file type: %s. Only JPG, PNG, GIF allowed", contentType),
 			StatusCode: http.StatusBadRequest,
 		}
 	}
 
-	return nil;
+	return contentType, nil;
 }
 const MaxSize = 10 << 20
-func UploadHandler(r *http.Request, client *s3.Client, dir string, key string, keyDel *string) (string, error) {
+func UploadHandler(r *http.Request, client *s3.Client, bucket, dir, key string, keyDel *string) (string, error) {
 	r.ParseMultipartForm(MaxSize)
-	defaultURL := "http://default.png";
-
 	mf := r.MultipartForm
 	if mf == nil || mf.File == nil {
-	  return defaultURL, nil
+	  return "", nil
 	}
 
 	files := mf.File["image"]
 	if len(files) == 0 {
-	  return defaultURL, nil
+	  return "", nil
 	}
 
 	fh := files[0]
@@ -94,15 +93,14 @@ func UploadHandler(r *http.Request, client *s3.Client, dir string, key string, k
     }
 }
 
-	if err := validateImgType(data); err != nil {
-	  return "", err
+	cType, err := validateImgType(data);
+	if err != nil {
+	  return "", err;
 	}
-
 	filename := key + "_" + GenerateUniqueNumber();
-	bucket := os.Getenv("R2_BUCKET_NAME");
-	if err := saveImageToCloud(r.Context(), client, bucket, dir, filename, data); err != nil {
+	if err := saveImageToCloud(r.Context(), client, bucket, dir, filename, cType, data); err != nil {
 	  return "", &AppError{
-	  	Message: "Could not upload image to cloud",
+	  	Message: err.Error(),
 	   	StatusCode: http.StatusInternalServerError,
 	  }
 	}
@@ -114,7 +112,7 @@ func UploadHandler(r *http.Request, client *s3.Client, dir string, key string, k
 		}
 	}
 
-	accountId := os.Getenv("R2_ACCOUNT_ID");
-	url := fmt.Sprintf("https://%s.r2.cloudflarestorage.com/%s/%s", accountId, dir, filename)
+	baseUrl := os.Getenv("PUBLIC_ENDPOINT_URL");
+	url := fmt.Sprintf("%s/%s/%s", baseUrl, dir, filename);
 	return url, nil
 }

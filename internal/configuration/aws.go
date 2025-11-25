@@ -2,7 +2,6 @@ package configuration
 
 import (
 	"context"
-	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -12,27 +11,28 @@ import (
 )
 
 func NewAwsClient() (*s3.Client, error) {
-	accountId := os.Getenv("R2_ACCOUNT_ID");
-	accessKey := os.Getenv("ACCESS_KEY");
-	secretAccess := os.Getenv("SECRET_ACCESS");
+	endpoint := os.Getenv("AWS_ENDPOINT_URL_S3");
+	accessKey := os.Getenv("AWS_ACCESS_KEY_ID");
+	secretKey := os.Getenv("AWS_SECRET_ACCESS_KEY");
 
 	cfg, err := config.LoadDefaultConfig(
 		context.TODO(),
 		config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
 				accessKey,
-				secretAccess,
+				secretKey,
 				"",
 			),
 		),
-		config.WithRegion("auto"),
 	);
 	if err != nil {
 		return nil, err;
 	};
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		 o.BaseEndpoint = aws.String(fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountId))
+		o.BaseEndpoint = aws.String(endpoint);
+		o.UsePathStyle = false;
+		o.Region = "auto";
 	});
 	return client, nil;
 }
