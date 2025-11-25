@@ -21,9 +21,9 @@ func New(h *handler.Handler) chi.Router {
 		// Protected routes
 		r.Group(func(r chi.Router) {
 			r.Use(jwtauth.Verifier(lib.TokenAuth));
-			r.Use(middleware.Auth());
+			r.Use(middleware.Auth);
 
-			r.Use(middleware.IsAdmin())
+			r.Use(middleware.IsAdmin)
 			r.Mount("/users", UserRouter(h.User));
 		})
 	});
