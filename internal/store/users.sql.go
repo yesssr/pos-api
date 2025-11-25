@@ -196,6 +196,36 @@ func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUse
 	return items, nil
 }
 
+const updatePass = `-- name: UpdatePass :one
+UPDATE users SET
+  password = $2,
+  updated_at = NOW()
+WHERE id = $1
+AND is_active = true
+RETURNING id, username, password, role, image_url, is_active, created_at, updated_at
+`
+
+type UpdatePassParams struct {
+	ID       pgtype.UUID `json:"id"`
+	Password string      `json:"password"`
+}
+
+func (q *Queries) UpdatePass(ctx context.Context, arg UpdatePassParams) (User, error) {
+	row := q.db.QueryRow(ctx, updatePass, arg.ID, arg.Password)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.Role,
+		&i.ImageUrl,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users SET
   username = $2,

@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 	"pos-api/internal/lib"
-	"pos-api/internal/store"
+	"pos-api/internal/service"
 )
 type LoginRequest struct {
 	Username string `json:"username"`
@@ -11,52 +11,25 @@ type LoginRequest struct {
 }
 
 type AuthHandler struct {
-	queries *store.Queries
+	s *service.AuthService;
 }
 
-func NewAuthHandler(q *store.Queries) *AuthHandler {
-	return &AuthHandler{ queries: q }
+func NewAuthHandler(s *service.AuthService) *AuthHandler {
+	return &AuthHandler{ s: s }
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var user LoginRequest;
 	if !lib.ValidateJSON(w, r, &user) {
-		return
+		return;
 	};
-	if user.Username == "" || user.Password == "" {
-		lib.SendErrorResponse(w, &lib.AppError{
-			Message: "Username and password are required",
-			StatusCode: http.StatusBadRequest,
-		});
-		return;
-	}
 
-	u, err := h.queries.GetUserByUsername(r.Context(), user.Username);
+	u, c, err := h.s.Login(r.Context(), user.Username, user.Password);
 	if err != nil {
-		lib.SendErrorResponse(w, &lib.AppError{
-			Message: err.Error(),
-			StatusCode: http.StatusInternalServerError,
-		});
+		lib.SendErrorResponse(w, err, nil);
 		return;
 	}
 
-	if err := lib.VerifyPassword(u.Password, user.Password); err != nil {
-		lib.SendErrorResponse(w, &lib.AppError{
-			Message: "Invalid username or password",
-			StatusCode: http.StatusUnauthorized,
-		});
-		return;
-	}
-
-	p := lib.Payload{
-		Id: u.ID.String(),
-		Username: u.Username,
-		Role: string(u.Role),
-	}
-	c, err := lib.CreateToken(p);
-	if err != nil {
-		lib.SendErrorResponse(w, err);
-		return;
-	}
-	lib.SendResponse(w, http.StatusOK, "Login successfully", nil, nil, &c);
+	u.Password = "";
+	lib.SendResponse(w, http.StatusOK, "Login successfully", u, nil, &c);
 }

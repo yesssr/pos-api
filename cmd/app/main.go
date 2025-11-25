@@ -9,6 +9,7 @@ import (
 	"pos-api/internal/handler"
 	"pos-api/internal/lib"
 	"pos-api/internal/router"
+	"pos-api/internal/service"
 	"pos-api/internal/store"
 
 	"github.com/joho/godotenv"
@@ -26,13 +27,15 @@ func main() {
 		panic(err);
 	}
 
-  r2Client, err := configuration.NewAwsClient();
+  awsClient, err := configuration.NewAwsClient();
   if err != nil {
 		panic(err);
 	}
 
+	bucket := os.Getenv("BUCKET_NAME");
 	q := store.New(db);
-	h := handler.New(q, r2Client);
+	s := service.New(q, awsClient, bucket);
+	h := handler.New(s);
 	r := router.New(h);
 
 	port := os.Getenv("PORT")

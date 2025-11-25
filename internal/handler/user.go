@@ -2,38 +2,34 @@ package handler
 
 import (
 	"net/http"
-	"os"
-	"path"
 	"pos-api/internal/lib"
 	"pos-api/internal/middleware"
+	"pos-api/internal/service"
 	"pos-api/internal/store"
 	"strconv"
-
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 const userDir = "users";
 type CreateUserInput struct {
-  Username string `json:"username" validate:"required,min=3"`
+  Username string `json:"username" validate:"required,min=3,username"`
   Password string `json:"password" validate:"required,min=6"`
   Role     store.Roles `json:"role" validate:"required,oneof=admin cashier"`
 }
 
 type UpdateUserInput struct {
-	Username string `json:"username" validate:"required,min=3"`
+	Username string `json:"username" validate:"required,min=3,username"`
 	Role     store.Roles `json:"role" validate:"required,oneof=admin cashier"`
+	Password string `json:"password" validate:"omitempty,min=6"`
 	ImageUrl string `json:"image_url" validate:"required"`
 	IsActive *bool `json:"is_active,omitempty" validate:"omitempty"`
 }
 
 type UserHandler struct {
-	queries *store.Queries;
-	r2Client *s3.Client;
+	s *service.UserService;
 }
 
-func NewUserHandler(q *store.Queries, r *s3.Client) *UserHandler {
+func NewUserHandler(s *service.UserService) *UserHandler {
 	return &UserHandler{
-		queries: q,
-		r2Client: r,
+		s: s,
 	}
 }
 
@@ -49,70 +45,43 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	};
 
 	if err := lib.ValidateStruct(b); err != nil {
-		lib.SendErrorResponse(w, err);
+		lib.SendErrorResponse(w, err, b);
 		return;
 	}
 
-	imageUrl, err := lib.UploadHandler(r, h.r2Client, userDir, b.Username, nil);
-
-	ctx := r.Context()
-	if _, err := h.queries.GetUserByUsername(ctx, b.Username); err == nil {
-		lib.SendErrorResponse(w, &lib.AppError{
-			Message: "Username already exists",
-			StatusCode: http.StatusBadRequest,
-		});
-		return;
-	}
-
-	pass, _ := lib.HashPassword(b.Password);
-
-	args := store.CreateUserParams{
-		Username: b.Username,
-		Password: pass,
-		Role:     b.Role,
-		ImageUrl: imageUrl,
-	}
-
-	u, err := h.queries.CreateUser(ctx, args);
+	u, err := h.s.CreateUser(r, b.Username, b.Password, b.Role);
 	if err != nil {
-		lib.SendErrorResponse(w, err);
+		lib.SendErrorResponse(w, err, nil);
 		return;
 	}
-
-	lib.SendResponse(w, http.StatusCreated, "Successfully added user", u, nil, nil)
+	lib.SendResponse(w, http.StatusCreated, "Successfully added user", u, nil, nil);
 }
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context();
 	p := lib.GetPagination(r);
-	limit := p.PerPage;
 	offset := (p.CurrentPage - 1) * p.PerPage;
-
-	args := store.ListUsersParams{
-		Limit:  int32(limit),
-		Offset: int32(offset),
+	l, t, err := h.s.ListUsers(r.Context(), p.PerPage, offset);
+	if err != nil {
+		lib.SendErrorResponse(w, err, nil);
+		return;
 	}
-
-	list, _ := h.queries.ListUsers(ctx, args);
-	t, _ := h.queries.CountUsers(ctx);
-	totalPages := (int(t) + limit - 1) / limit;
-	p.TotalPages = &totalPages;
-	lib.SendResponse(w, http.StatusOK, "List of users", list, p, nil)
+	p.TotalPages = &t;
+	lib.SendResponse(w, http.StatusOK, "List of users", l, p, nil)
 }
 
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context();
-	id, err := middleware.GetIdFromCtx(r);
+	id, _ := middleware.GetIdFromCtx(r);
+	u, err := h.s.GetUserById(r.Context(), id);
 	if err != nil {
-		lib.SendErrorResponse(w, err);
+		lib.SendErrorResponse(w, err, nil);
 		return;
 	}
-	u, _ := h.queries.GetUserById(ctx, id);
 	lib.SendResponse(w, http.StatusOK, "User details", u, nil, nil);
 }
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username");
+	password := r.FormValue("password");
   strIsActive := r.FormValue("is_active");
   role := r.FormValue("role");
   submittedImageUrl := r.FormValue("image_url");
@@ -128,61 +97,39 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		Role: store.Roles(role),
 		ImageUrl: submittedImageUrl,
 		IsActive: isAct,
+		Password: password,
 	}
 
 	if err := lib.ValidateStruct(b); err != nil {
-		lib.SendErrorResponse(w, err);
+		lib.SendErrorResponse(w, err, b);
 		return;
 	}
 
-	id, err := middleware.GetIdFromCtx(r);
+	u, err := h.s.UpdateUser(r, b.Username, b.Password, b.IsActive, b.Role, b.ImageUrl);
 	if err != nil {
-		lib.SendErrorResponse(w, err);
+		lib.SendErrorResponse(w, err, nil);
 		return;
 	}
-
-	pgBool := lib.BoolPtrToPgBool(b.IsActive);
-	kDel := path.Base(submittedImageUrl);
-	imageUrl, err := lib.UploadHandler(r, h.r2Client, userDir, b.Username, &kDel);
-	if err != nil {
-		lib.SendErrorResponse(w, err);
-		return;
-	}
-
-	if imageUrl != "http://default.png" {
-		b.ImageUrl = imageUrl;
-	}
-
-	args := store.UpdateUserParams{
-		ID: id,
-		Username: b.Username,
-		Role: b.Role,
-		IsActive: pgBool,
-		ImageUrl: b.ImageUrl,
-	}
-
-	ctx := r.Context();
-	u, _ := h.queries.UpdateUser(ctx, args);
 	lib.SendResponse(w, http.StatusOK, "Successfully updated user", u, nil, nil);
 }
 
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context();
-	id, err := middleware.GetIdFromCtx(r);
+	id, _ := middleware.GetIdFromCtx(r);
+
+	u, err := h.s.DeleteUser(ctx, id);
 	if err != nil {
-		lib.SendErrorResponse(w, err);
-		return;
-	}
-	u, err := h.queries.DeleteUser(ctx, id);
-	if err != nil {
-		lib.SendErrorResponse(w, err);
-		return;
-	}
-	bucket := os.Getenv("R2_BUCKET_NAME");
-	k := path.Base(u.ImageUrl);
-	if err := lib.DeleteImageFromCloud(ctx, h.r2Client, bucket, userDir, k); err != nil {
-		lib.SendErrorResponse(w, err);
+		lib.SendErrorResponse(w, err, nil);
 		return;
 	}
 	lib.SendResponse(w, http.StatusOK, "Successfully deleted user", u, nil, nil);
+}
+
+func (h *UserHandler) GetTotalUser(w http.ResponseWriter, r *http.Request) {
+	t, err := h.s.GetTotalUser(r.Context());
+	if err != nil {
+		lib.SendErrorResponse(w, err, nil);
+		return;
+	}
+	lib.SendResponse(w, http.StatusOK, "Total users", t, nil, nil);
 }

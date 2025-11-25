@@ -39,6 +39,14 @@ WHERE id = $1
 AND is_active = true
 RETURNING *;
 
+-- name: UpdatePass :one
+UPDATE users SET
+  password = $2,
+  updated_at = NOW()
+WHERE id = $1
+AND is_active = true
+RETURNING *;
+
 -- name: DeleteUser :one
 DELETE FROM users
 WHERE id = $1
