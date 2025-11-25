@@ -48,8 +48,6 @@ func SendErrorResponse(
 	msg := "Internal Server Error";
 	var errors any = nil;
 
-	fmt.Println("Error:", err);
-
 	if err, ok := err.(*AppError); ok {
 		statusCode = err.StatusCode;
 		msg = err.Message;

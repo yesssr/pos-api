@@ -5,12 +5,6 @@ import (
 	"net/http"
 )
 
-type Pagination struct {
-	TotalPages  int `json:"total_pages"`
-	CurrentPage int `json:"current_page"`
-	PerPage     int `json:"per_page"`
-}
-
 type Response struct {
 	Success     bool        `json:"success"`
 	StatusCode  int         `json:"status_code"`
