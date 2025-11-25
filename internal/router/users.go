@@ -19,6 +19,7 @@ func UserRouter(h *handler.UserHandler) http.Handler {
    	r.Get("/", h.GetUser);
     r.Put("/", h.UpdateUser);
     r.Delete("/", h.DeleteUser);
-  })
-  return r
+  });
+  r.Get("/count", h.GetTotalUser);
+  return r;
 }
