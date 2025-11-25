@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-playground/validator/v10"
@@ -13,9 +14,20 @@ import (
 )
 
 var validate *validator.Validate
+func usernameValidator(fl validator.FieldLevel) bool {
+  u := fl.Field().String()
+  if u != strings.ToLower(u) {
+    return false;
+  }
+  if strings.Contains(u, " ") {
+    return false;
+  }
+  return true;
+}
 
 func init() {
   validate = validator.New()
+  validate.RegisterValidation("username", usernameValidator);
 }
 
 func ValidateStruct(s any) error {
@@ -29,7 +41,7 @@ func ValidateJSON[T any](w http.ResponseWriter, r *http.Request, dst *T) bool {
 		SendErrorResponse(w, &AppError{
       Message: "Invalid JSON",
       StatusCode: http.StatusBadRequest,
-    })
+    }, nil)
 		return false
 	}
 	return true

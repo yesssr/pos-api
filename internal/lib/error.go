@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -29,13 +30,13 @@ func validationMessage(fe validator.FieldError) string {
 	case "required":
 		return "Field ini wajib diisi"
 	case "min":
-		return fmt.Sprintf("Minimal %s karakter", fe.Param())
+		return fmt.Sprintf("Minimal %s karakter", fe.Param());
 	case "max":
-		return fmt.Sprintf("Maksimal %s karakter", fe.Param())
+		return fmt.Sprintf("Maksimal %s karakter", fe.Param());
 	case "oneof":
-		return fmt.Sprintf("Harus salah satu dari: %s", fe.Param())
-	case "email":
-		return "Format email tidak valid"
+		return fmt.Sprintf("Harus salah satu dari: %s", fe.Param());
+	case "username":
+		return "Username harus huruf kecil tanpa spasi";
 	}
 	return "Format tidak valid"
 }
@@ -43,6 +44,7 @@ func validationMessage(fe validator.FieldError) string {
 func SendErrorResponse(
 	w http.ResponseWriter,
 	err error,
+	obj any,
 ) {
 	statusCode := http.StatusInternalServerError;
 	msg := "Internal Server Error";
@@ -56,9 +58,16 @@ func SendErrorResponse(
 	if err, ok := err.(validator.ValidationErrors); ok {
 		statusCode = http.StatusBadRequest;
 		msg = "Validation Error";
-		var out map[string]string = make(map[string]string);
+		out := make(map[string]string);
+  	typ := reflect.TypeOf(obj).Elem();
+
 		for _, e := range err {
-			out[e.Field()] = validationMessage(e);
+			fieldStruct, _ := typ.FieldByName(e.StructField());
+			jsonTag := fieldStruct.Tag.Get("json");
+			if jsonTag == "" {
+				jsonTag = e.Field();
+			}
+			out[jsonTag] = validationMessage(e);
 		}
 		errors = out;
 	}
