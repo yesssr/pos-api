@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"pos-api/internal/lib"
+	"pos-api/internal/middleware"
 	"pos-api/internal/store"
 
 	"github.com/jackc/pgx/v5"
@@ -36,12 +37,12 @@ func(s *AuthService) Login(ctx context.Context, username, password string) (stor
 		};
 	}
 
-	p := lib.Payload{
+	p := middleware.Payload{
 		Id: u.ID.String(),
 		Username: u.Username,
 		Role: string(u.Role),
 	}
-	c, err := lib.CreateToken(p);
+	c, err := middleware.CreateToken(p);
 	if err != nil {
 		return store.GetUserByUsernameRow{}, "", err;
 	}
