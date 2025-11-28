@@ -49,7 +49,7 @@ func SendErrorResponse(
 	statusCode := http.StatusInternalServerError;
 	msg := "Internal Server Error";
 	var errors any = nil;
-
+	fmt.Println(err);
 	if err, ok := err.(*AppError); ok {
 		statusCode = err.StatusCode;
 		msg = err.Message;
