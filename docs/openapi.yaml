@@ -1,0 +1,34 @@
+openapi: 3.1.0
+info:
+  title: POS API
+  version: 1.0.0
+  description: REST API for POS system with user and product management
+servers:
+  - url: /api/v1
+
+paths:
+  /auth/login:
+    $ref: "./auth.yaml#/paths/~1auth~1login"
+
+  /users:
+    $ref: "./users.yaml#/paths/~1users"
+
+  /users/{id}:
+    $ref: "./users.yaml#/paths/~1users~1{id}"
+
+  /users/count:
+    $ref: "./users.yaml#/paths/~1users~1count"
+
+  /products:
+    $ref: "./products.yaml#/paths/~1products"
+
+  /products/{id}:
+    $ref: "./products.yaml#/paths/~1products~1{id}"
+
+  /products/count:
+    $ref: "./products.yaml#/paths/~1products~1count"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      $ref: "./users.yaml#/components/securitySchemes/BearerAuth"
