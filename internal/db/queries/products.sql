@@ -3,6 +3,17 @@ INSERT INTO products (name, price, stock, image_url)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
 
+-- name: GetProduct :one
+SELECT
+  id,
+  name,
+  price,
+  stock,
+  image_url,
+  is_active
+FROM products
+WHERE id = $1;
+
 -- name: UpdateProduct :one
 UPDATE products SET
   name = $2,
@@ -19,7 +30,7 @@ DELETE FROM products
 WHERE id = $1
 RETURNING *;
 
--- name: ListProducts :many
+-- name: ListProductsAsc :many
 SELECT
   id,
   name,
@@ -28,10 +39,24 @@ SELECT
   image_url,
   is_active
 FROM products
-ORDER BY created_at $3
+WHERE name ILIKE '%' || $4 || '%'
+ORDER BY $3 ASC
+LIMIT $1 OFFSET $2;
+
+-- name: ListProductsDesc :many
+SELECT
+  id,
+  name,
+  price,
+  stock,
+  image_url,
+  is_active
+FROM products
+WHERE name ILIKE '%' || $4 || '%'
+ORDER BY $3 DESC
 LIMIT $1 OFFSET $2;
 
 -- name: CountProducts :one
 SELECT COUNT(*) AS count
 FROM products
-WHERE is_active = true;
+WHERE name ILIKE '%' || $1 || '%';

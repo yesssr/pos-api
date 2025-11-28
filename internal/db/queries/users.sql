@@ -15,7 +15,7 @@ SELECT
   role,
   image_url
 FROM users
-WHERE is_active = true
+WHERE username ILIKE '%' || $3 || '%'
 LIMIT $1 OFFSET $2;
 
 -- name: GetUserById :one
@@ -25,8 +25,7 @@ SELECT
   role,
   image_url
 FROM users
-WHERE id = $1
-AND is_active = true;
+WHERE id = $1;
 
 -- name: UpdateUser :one
 UPDATE users SET
@@ -36,7 +35,6 @@ UPDATE users SET
   image_url = $5,
   updated_at = NOW()
 WHERE id = $1
-AND is_active = true
 RETURNING *;
 
 -- name: UpdatePass :one
@@ -66,4 +64,5 @@ AND is_active = true;
 -- name: CountUsers :one
 SELECT COUNT(*) AS count
 FROM users
-WHERE is_active = true;
+WHERE username ILIKE '%' || $1 || '%'
+AND is_active = true;

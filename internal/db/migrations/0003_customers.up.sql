@@ -5,3 +5,5 @@ CREATE TABLE customers (
   address TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+CREATE INDEX idx_customers_name ON products USING gin (name gin_trgm_ops);
