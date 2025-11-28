@@ -9,11 +9,13 @@ import (
 type Service struct {
 	UserService *UserService;
 	AuthService *AuthService;
+	ProductService *ProductService;
 }
 
 func New(q *store.Queries, awsClient *s3.Client, bucket string) *Service {
 	return &Service{
 		UserService: NewUserService(q, awsClient, bucket, "users"),
 		AuthService: NewAuthService(q),
+		ProductService: NewProductService(q, awsClient, bucket, "products"),
 	}
 }

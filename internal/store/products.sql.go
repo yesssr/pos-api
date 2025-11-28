@@ -14,11 +14,11 @@ import (
 const countProducts = `-- name: CountProducts :one
 SELECT COUNT(*) AS count
 FROM products
-WHERE is_active = true
+WHERE name ILIKE '%' || $1 || '%'
 `
 
-func (q *Queries) CountProducts(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countProducts)
+func (q *Queries) CountProducts(ctx context.Context, dollar_1 pgtype.Text) (int64, error) {
+	row := q.db.QueryRow(ctx, countProducts, dollar_1)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -80,7 +80,7 @@ func (q *Queries) DeleteProduct(ctx context.Context, id pgtype.UUID) (Product, e
 	return i, err
 }
 
-const listProducts = `-- name: ListProducts :many
+const getProduct = `-- name: GetProduct :one
 SELECT
   id,
   name,
@@ -89,17 +89,10 @@ SELECT
   image_url,
   is_active
 FROM products
-ORDER BY created_at $3
-LIMIT $1 OFFSET $2
+WHERE id = $1
 `
 
-type ListProductsParams struct {
-	Limit   int32       `json:"limit"`
-	Offset  int32       `json:"offset"`
-	Column3 interface{} `json:"column_3"`
-}
-
-type ListProductsRow struct {
+type GetProductRow struct {
 	ID       pgtype.UUID    `json:"id"`
 	Name     string         `json:"name"`
 	Price    pgtype.Numeric `json:"price"`
@@ -108,15 +101,126 @@ type ListProductsRow struct {
 	IsActive bool           `json:"is_active"`
 }
 
-func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error) {
-	rows, err := q.db.Query(ctx, listProducts, arg.Limit, arg.Offset, arg.Column3)
+func (q *Queries) GetProduct(ctx context.Context, id pgtype.UUID) (GetProductRow, error) {
+	row := q.db.QueryRow(ctx, getProduct, id)
+	var i GetProductRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Price,
+		&i.Stock,
+		&i.ImageUrl,
+		&i.IsActive,
+	)
+	return i, err
+}
+
+const listProductsAsc = `-- name: ListProductsAsc :many
+SELECT
+  id,
+  name,
+  price,
+  stock,
+  image_url,
+  is_active
+FROM products
+WHERE name ILIKE '%' || $4 || '%'
+ORDER BY $3 ASC
+LIMIT $1 OFFSET $2
+`
+
+type ListProductsAscParams struct {
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
+	Column3 interface{} `json:"column_3"`
+	Column4 pgtype.Text `json:"column_4"`
+}
+
+type ListProductsAscRow struct {
+	ID       pgtype.UUID    `json:"id"`
+	Name     string         `json:"name"`
+	Price    pgtype.Numeric `json:"price"`
+	Stock    int32          `json:"stock"`
+	ImageUrl string         `json:"image_url"`
+	IsActive bool           `json:"is_active"`
+}
+
+func (q *Queries) ListProductsAsc(ctx context.Context, arg ListProductsAscParams) ([]ListProductsAscRow, error) {
+	rows, err := q.db.Query(ctx, listProductsAsc,
+		arg.Limit,
+		arg.Offset,
+		arg.Column3,
+		arg.Column4,
+	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListProductsRow
+	var items []ListProductsAscRow
 	for rows.Next() {
-		var i ListProductsRow
+		var i ListProductsAscRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Price,
+			&i.Stock,
+			&i.ImageUrl,
+			&i.IsActive,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listProductsDesc = `-- name: ListProductsDesc :many
+SELECT
+  id,
+  name,
+  price,
+  stock,
+  image_url,
+  is_active
+FROM products
+WHERE name ILIKE '%' || $4 || '%'
+ORDER BY $3 DESC
+LIMIT $1 OFFSET $2
+`
+
+type ListProductsDescParams struct {
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
+	Column3 interface{} `json:"column_3"`
+	Column4 pgtype.Text `json:"column_4"`
+}
+
+type ListProductsDescRow struct {
+	ID       pgtype.UUID    `json:"id"`
+	Name     string         `json:"name"`
+	Price    pgtype.Numeric `json:"price"`
+	Stock    int32          `json:"stock"`
+	ImageUrl string         `json:"image_url"`
+	IsActive bool           `json:"is_active"`
+}
+
+func (q *Queries) ListProductsDesc(ctx context.Context, arg ListProductsDescParams) ([]ListProductsDescRow, error) {
+	rows, err := q.db.Query(ctx, listProductsDesc,
+		arg.Limit,
+		arg.Offset,
+		arg.Column3,
+		arg.Column4,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProductsDescRow
+	for rows.Next() {
+		var i ListProductsDescRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
