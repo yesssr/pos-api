@@ -63,17 +63,18 @@ func(s *UserService) CreateUser(
 	return u, nil;
 }
 
-func(s *UserService) ListUsers(ctx context.Context, l, o int) ([]store.ListUsersRow, int, error) {
-	limit := l;
-
+func(s *UserService) ListUsers(ctx context.Context, l, o int, search string) ([]store.ListUsersRow, int, error) {
 	args := store.ListUsersParams{
-		Limit:  int32(limit),
+		Limit:  int32(l),
 		Offset: int32(o),
+		Column3: pgtype.Text{String: search, Valid: true},
 	}
-	list, _ := s.q.ListUsers(ctx, args);
-	t, _ := s.q.CountUsers(ctx);
-	totalPages := (int(t) + limit - 1) / limit;
-	return list, totalPages, nil;
+	u, _ := s.q.ListUsers(ctx, args);
+	c, _ := s.q.CountUsers(ctx, pgtype.Text{String: search, Valid: true});
+	t := int(c);
+
+	totalPages := lib.GetTotalPages(t, l);
+	return u, totalPages, nil;
 }
 
 func(s *UserService) GetUserById(ctx context.Context, id pgtype.UUID) (store.GetUserByIdRow, error) {
@@ -146,7 +147,7 @@ func (s *UserService) DeleteUser(ctx context.Context, id pgtype.UUID) (store.Use
 }
 
 func (s *UserService) GetTotalUser(ctx context.Context) (int, error) {
-	t, err := s.q.CountUsers(ctx);
+	t, err := s.q.CountUsers(ctx, pgtype.Text{Valid: true});
 	if err != nil {
 		return 0, err;
 	}

@@ -14,11 +14,12 @@ import (
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) AS count
 FROM users
-WHERE is_active = true
+WHERE username ILIKE '%' || $1 || '%'
+AND is_active = true
 `
 
-func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countUsers)
+func (q *Queries) CountUsers(ctx context.Context, dollar_1 pgtype.Text) (int64, error) {
+	row := q.db.QueryRow(ctx, countUsers, dollar_1)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -93,7 +94,6 @@ SELECT
   image_url
 FROM users
 WHERE id = $1
-AND is_active = true
 `
 
 type GetUserByIdRow struct {
@@ -155,13 +155,14 @@ SELECT
   role,
   image_url
 FROM users
-WHERE is_active = true
+WHERE username ILIKE '%' || $3 || '%'
 LIMIT $1 OFFSET $2
 `
 
 type ListUsersParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
+	Column3 pgtype.Text `json:"column_3"`
 }
 
 type ListUsersRow struct {
@@ -172,7 +173,7 @@ type ListUsersRow struct {
 }
 
 func (q *Queries) ListUsers(ctx context.Context, arg ListUsersParams) ([]ListUsersRow, error) {
-	rows, err := q.db.Query(ctx, listUsers, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listUsers, arg.Limit, arg.Offset, arg.Column3)
 	if err != nil {
 		return nil, err
 	}
@@ -234,7 +235,6 @@ UPDATE users SET
   image_url = $5,
   updated_at = NOW()
 WHERE id = $1
-AND is_active = true
 RETURNING id, username, password, role, image_url, is_active, created_at, updated_at
 `
 

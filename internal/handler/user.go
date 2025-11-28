@@ -8,7 +8,7 @@ import (
 	"pos-api/internal/store"
 	"strconv"
 )
-const userDir = "users";
+
 type CreateUserInput struct {
   Username string `json:"username" validate:"required,min=3,username"`
   Password string `json:"password" validate:"required,min=6"`
@@ -59,8 +59,10 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	p := lib.GetPagination(r);
+	q, _ := middleware.GetQueryFromCtx(r);
+
 	offset := (p.CurrentPage - 1) * p.PerPage;
-	l, t, err := h.s.ListUsers(r.Context(), p.PerPage, offset);
+	l, t, err := h.s.ListUsers(r.Context(), p.PerPage, offset, q.Search);
 	if err != nil {
 		lib.SendErrorResponse(w, err, nil);
 		return;

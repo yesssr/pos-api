@@ -13,7 +13,7 @@ import (
 func UserRouter(h *handler.UserHandler) http.Handler {
   r := chi.NewRouter();
   r.Post("/", h.CreateUser);
-  r.With(lib.Paginate).Get("/", h.ListUsers);
+  r.With(middleware.QueryCtx, lib.Paginate).Get("/", h.ListUsers);
   r.Route("/{id}", func(r chi.Router) {
   	r.Use(middleware.IdCtx)
    	r.Get("/", h.GetUser);
