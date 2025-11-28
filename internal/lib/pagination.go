@@ -50,3 +50,7 @@ func GetPagination(r *http.Request) *Pagination {
 	p, _ := r.Context().Value(paginationKey{}).(*Pagination);
 	return p;
 }
+
+func GetTotalPages(t, limit int) int {
+	return (int(t) + limit- 1) / limit;
+}

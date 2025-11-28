@@ -7,7 +7,7 @@ import (
 	"os"
 	"pos-api/internal/configuration"
 	"pos-api/internal/handler"
-	"pos-api/internal/lib"
+	"pos-api/internal/middleware"
 	"pos-api/internal/router"
 	"pos-api/internal/service"
 	"pos-api/internal/store"
@@ -19,7 +19,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		fmt.Println("No .env file found, using system env")
   }
-  lib.InitJWT();
+  middleware.InitJWT();
   ctx := context.Background();
 
   db, err := configuration.NewPool(ctx);

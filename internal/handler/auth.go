@@ -5,6 +5,7 @@ import (
 	"pos-api/internal/lib"
 	"pos-api/internal/service"
 )
+
 type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
