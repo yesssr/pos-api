@@ -14,11 +14,11 @@ import (
 const countCustomers = `-- name: CountCustomers :one
 SELECT COUNT(*) AS count
 FROM customers
-WHERE is_active = true
+WHERE name ILIKE '%' || $1 || '%'
 `
 
-func (q *Queries) CountCustomers(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countCustomers)
+func (q *Queries) CountCustomers(ctx context.Context, dollar_1 pgtype.Text) (int64, error) {
+	row := q.db.QueryRow(ctx, countCustomers, dollar_1)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -92,7 +92,7 @@ func (q *Queries) GetCustomerByID(ctx context.Context, id pgtype.UUID) (Customer
 	return i, err
 }
 
-const listCustomer = `-- name: ListCustomer :many
+const listCustomers = `-- name: ListCustomers :many
 SELECT
   id,
   name,
@@ -100,18 +100,19 @@ SELECT
   address,
   created_at
 FROM customers
-ORDER BY created_at $3
+WHERE name ILIKE '%' || $3 || '%'
+ORDER BY created_at DESC
 LIMIT $1 OFFSET $2
 `
 
-type ListCustomerParams struct {
+type ListCustomersParams struct {
 	Limit   int32       `json:"limit"`
 	Offset  int32       `json:"offset"`
-	Column3 interface{} `json:"column_3"`
+	Column3 pgtype.Text `json:"column_3"`
 }
 
-func (q *Queries) ListCustomer(ctx context.Context, arg ListCustomerParams) ([]Customer, error) {
-	rows, err := q.db.Query(ctx, listCustomer, arg.Limit, arg.Offset, arg.Column3)
+func (q *Queries) ListCustomers(ctx context.Context, arg ListCustomersParams) ([]Customer, error) {
+	rows, err := q.db.Query(ctx, listCustomers, arg.Limit, arg.Offset, arg.Column3)
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,7 @@ UPDATE customers SET
 WHERE id = $1
 RETURNING *;
 
--- name: ListCustomer :many
+-- name: ListCustomers :many
 SELECT
   id,
   name,
@@ -19,7 +19,8 @@ SELECT
   address,
   created_at
 FROM customers
-ORDER BY created_at $3
+WHERE name ILIKE '%' || $3 || '%'
+ORDER BY created_at DESC
 LIMIT $1 OFFSET $2;
 
 -- name: GetCustomerByID :one
@@ -40,4 +41,4 @@ RETURNING *;
 -- name: CountCustomers :one
 SELECT COUNT(*) AS count
 FROM customers
-WHERE is_active = true;
+WHERE name ILIKE '%' || $1 || '%';

@@ -39,15 +39,19 @@ func DocsRouter() http.Handler {
 		r.Get("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/vnd.oai.openapi+yaml; charset=utf-8")
 			http.ServeFile(w, r, "docs/openapi.yaml");
-		})
+		});
 		r.Get("/auth.yaml", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/yaml; charset=utf-8");
 			http.ServeFile(w, r, "docs/auth.yaml");
-		})
+		});
 		r.Get("/users.yaml", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/yaml; charset=utf-8");
 			http.ServeFile(w, r, "docs/users.yaml");
-		})
+		});
+		r.Get("/customers.yaml", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/yaml; charset=utf-8");
+			http.ServeFile(w, r, "docs/customers.yaml");
+		});
 		r.Get("/products.yaml", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/yaml; charset=utf-8");
 			http.ServeFile(w, r, "docs/products.yaml");

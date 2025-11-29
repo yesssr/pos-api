@@ -24,10 +24,20 @@ func New(h *handler.Handler) chi.Router {
 			r.Use(jwtauth.Verifier(middleware.TokenAuth));
 			r.Use(middleware.Auth);
 
-			r.Use(middleware.IsAdmin)
-			r.Mount("/users", UserRouter(h.User));
-			r.Mount("/products", ProductRouter(h.Product));
-		})
+
+			// Non-admin subgroup
+			r.Group(func(r chi.Router) {
+				r.Mount("/customers", CustomerRouter(h.Customer));
+			});
+
+			// Admin subgroup
+			r.Group(func(r chi.Router) {
+				r.Use(middleware.IsAdmin);
+				r.Mount("/users", UserRouter(h.User));
+				r.Mount("/products", ProductRouter(h.Product));
+			});
+
+		});
 	});
 	return r;
 }
