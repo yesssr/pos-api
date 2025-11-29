@@ -10,14 +10,14 @@ import (
 	"strings"
 )
 
-type CreateProductInput struct {
+type createProductInput struct {
 	Name  string `json:"name" validate:"required,min=2"`
 	Price string `json:"price" validate:"required,gt=0"`
 	Stock int32  `json:"stock" validate:"required,gte=0"`
 	ImageUrl    string `json:"image_url,omitempty" validate:"omitempty"`
 }
 
-type UpdateProductInput struct {
+type updateProductInput struct {
 	Name        string `json:"name" validate:"required,min=2"`
 	Price       string `json:"price" validate:"required"`
 	Stock       int32  `json:"stock" validate:"required"`
@@ -42,7 +42,7 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 	imageUrl := "default.png";
 
 	stock64, _ := strconv.ParseInt(stockStr, 10, 32);
-	b := &CreateProductInput{
+	b := &createProductInput{
 		Name:  name,
 		Price: priceStr,
 		Stock: int32(stock64),
@@ -105,7 +105,7 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	submittedImageUrl := r.FormValue("image_url")
 
 	stock64, _ := strconv.ParseInt(stockStr, 10, 32)
-	b := &UpdateProductInput{
+	b := &updateProductInput{
 		Name:        name,
 		Price:       priceStr,
 		Stock:       int32(stock64),

@@ -9,13 +9,13 @@ import (
 	"strconv"
 )
 
-type CreateUserInput struct {
+type createUserInput struct {
   Username string `json:"username" validate:"required,min=3,username"`
   Password string `json:"password" validate:"required,min=6"`
   Role     store.Roles `json:"role" validate:"required,oneof=admin cashier"`
 }
 
-type UpdateUserInput struct {
+type updateUserInput struct {
 	Username string `json:"username" validate:"required,min=3,username"`
 	Role     store.Roles `json:"role" validate:"required,oneof=admin cashier"`
 	Password string `json:"password" validate:"omitempty,min=6"`
@@ -38,7 +38,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
   password := r.FormValue("password");
   role := r.FormValue("role");
 
-	b := &CreateUserInput{
+	b := &createUserInput{
 		Username: username,
 		Password: password,
 		Role: store.Roles(role),
@@ -94,7 +94,7 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		isAct = &temp;
 	}
 
- 	b := &UpdateUserInput{
+ 	b := &updateUserInput{
 		Username: username,
 		Role: store.Roles(role),
 		ImageUrl: submittedImageUrl,

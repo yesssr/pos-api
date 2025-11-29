@@ -14,65 +14,58 @@ type QueryPayload struct {
 	OrderDir string
 }
 
-func QueryCtx(next http.Handler) http.Handler {
-	hfn := func(w http.ResponseWriter, r *http.Request) {
-	search := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("search")));
-	orderBy := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("order_by")));
-	orderDir := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("order_dir")));
+func QueryCtx(allowedCol map[string]bool) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		if orderBy != "" {
-			allowedOrderBy := map[string]bool{
-				"created_at": true,
-				"username":   true,
-				"role":       true,
-				"price":			true,
-				"stock":			true,
-				"updated_at": true,
-				"name":       true,
+			search := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("search")));
+			orderBy := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("order_by")));
+			orderDir := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("order_dir")));
+
+			if orderBy != "" {
+				if !allowedCol[orderBy] {
+					lib.SendErrorResponse(w, &lib.AppError{
+						Message:    "Invalid order_by parameter",
+						StatusCode: http.StatusBadRequest,
+					}, nil);
+					return;
+				}
+			} else {
+				orderBy = "created_at";
 			}
 
-			if !allowedOrderBy[orderBy] {
+			if orderDir != "" {
+				if orderDir != "asc" && orderDir != "desc" {
+					lib.SendErrorResponse(w, &lib.AppError{
+						Message:    "Invalid order_dir parameter",
+						StatusCode: http.StatusBadRequest,
+					}, nil);
+					return;
+				}
+			} else {
+				orderDir = "desc";
+			}
+
+			if search != "" && len(search) < 3 {
 				lib.SendErrorResponse(w, &lib.AppError{
-					Message: "Invalid order_by parameter",
+					Message:    "Search term must be at least 3 characters long",
 					StatusCode: http.StatusBadRequest,
 				}, nil);
 				return;
 			}
-		} else {
-			orderBy = "created_at";
-		}
 
-		if orderDir != "" {
-			if orderDir != "asc" && orderDir != "desc" {
-				lib.SendErrorResponse(w, &lib.AppError{
-					Message: "Invalid order_dir parameter",
-					StatusCode: http.StatusBadRequest,
-				}, nil);
-				return;
+			q := &QueryPayload{
+				Search:   search,
+				OrderBy:  orderBy,
+				OrderDir: orderDir,
 			}
-		} else {
-			orderDir = "desc";
-		}
 
-		if search != "" && len(search) < 3 {
-			lib.SendErrorResponse(w, &lib.AppError{
-				Message: "Search term must be at least 3 characters long",
-				StatusCode: http.StatusBadRequest,
-			}, nil);
-			return;
-		}
-
-		q := &QueryPayload{
-			Search: search,
-			OrderBy: orderBy,
-			OrderDir: orderDir,
-		}
-
-		ctx := context.WithValue(r.Context(), queryKey{}, q);
-		next.ServeHTTP(w, r.WithContext(ctx));
-	};
-	return http.HandlerFunc(hfn);
+			ctx := context.WithValue(r.Context(), queryKey{}, q)
+			next.ServeHTTP(w, r.WithContext(ctx));
+		});
+	}
 }
+
 
 func GetQueryFromCtx(r *http.Request) (*QueryPayload, bool) {
 	s, ok := r.Context().Value(queryKey{}).(*QueryPayload);

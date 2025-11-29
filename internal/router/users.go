@@ -12,10 +12,17 @@ import (
 
 func UserRouter(h *handler.UserHandler) http.Handler {
   r := chi.NewRouter();
+  allowedCols := map[string]bool{
+   	"username":   true,
+		"role":       true,
+    "created_at": true,
+    "updated_at": true,
+  }
+
   r.Post("/", h.CreateUser);
-  r.With(middleware.QueryCtx, lib.Paginate).Get("/", h.ListUsers);
+  r.With(middleware.QueryCtx(allowedCols), lib.Paginate).Get("/", h.ListUsers);
   r.Route("/{id}", func(r chi.Router) {
-  	r.Use(middleware.IdCtx)
+  	r.Use(middleware.IdCtx);
    	r.Get("/", h.GetUser);
     r.Put("/", h.UpdateUser);
     r.Delete("/", h.DeleteUser);
