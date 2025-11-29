@@ -86,7 +86,7 @@ func (s *ProductService) ListProducts(ctx context.Context, l, o int, oBy, oDir, 
 		list = p;
 	}
 
-	c, _ := s.q.CountUsers(ctx, pgtype.Text{String: search, Valid: true});
+	c, _ := s.q.CountProducts(ctx, pgtype.Text{String: search, Valid: true});
 	t := int(c);
 
 	totalPages := lib.GetTotalPages(t, l);
