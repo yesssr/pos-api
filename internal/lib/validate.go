@@ -3,6 +3,7 @@ package lib
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"math/rand"
 	"net/http"
@@ -60,11 +61,25 @@ func BoolPtrToPgBool(b *bool,) pgtype.Bool {
 	}
 }
 
-func IntToPgNumeric(v *big.Int) *pgtype.Numeric {
+func IntToPgNumeric(v int) *pgtype.Numeric {
+	r := big.NewInt(int64(v));
 	return &pgtype.Numeric{
-		Int: v,
+		Int: r,
 		Valid: true,
 	}
+}
+
+func NumericToFloat(n pgtype.Numeric) float64 {
+	if !n.Valid {
+		return 0
+	}
+
+	i := new(big.Float).SetInt(n.Int)
+	e := big.NewFloat(math.Pow10(int(n.Exp)))
+	f := new(big.Float).Mul(i, e)
+
+	v, _ := f.Float64()
+	return v
 }
 
 func GenerateUniqueNumber() string {
