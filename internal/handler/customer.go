@@ -28,12 +28,12 @@ type updateCustomerInput struct {
 }
 
 func(h *CustomerHandler) CreateCustomer(w http.ResponseWriter, r *http.Request) {
-	var b createCustomerInput;
-	if !lib.ValidateJSON(w, r, &b) {
+	b := &createCustomerInput{};
+	if !lib.ValidateJSON(w, r, b) {
 		return;
 	}
 
-	if err := lib.ValidateStruct(&b); err != nil {
+	if err := lib.ValidateStruct(b); err != nil {
 		lib.SendErrorResponse(w, err, b);
 		return;
 	}
