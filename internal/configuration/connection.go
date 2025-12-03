@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -18,6 +19,6 @@ func NewPool(ctx context.Context) (*pgxpool.Pool, error) {
   if err != nil {
     return nil, err
   }
-
+  pool.BeginTx(ctx, pgx.TxOptions{});
   return pool, nil
 }

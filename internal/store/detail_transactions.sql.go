@@ -20,7 +20,7 @@ INSERT INTO detail_transactions (
   subtotal
 )
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id
+RETURNING id, id_transaction, id_product, qty, price, subtotal
 `
 
 type CreateDetailTransactionParams struct {
@@ -31,7 +31,7 @@ type CreateDetailTransactionParams struct {
 	Subtotal      pgtype.Numeric `json:"subtotal"`
 }
 
-func (q *Queries) CreateDetailTransaction(ctx context.Context, arg CreateDetailTransactionParams) (pgtype.UUID, error) {
+func (q *Queries) CreateDetailTransaction(ctx context.Context, arg CreateDetailTransactionParams) (DetailTransaction, error) {
 	row := q.db.QueryRow(ctx, createDetailTransaction,
 		arg.IDTransaction,
 		arg.IDProduct,
@@ -39,9 +39,16 @@ func (q *Queries) CreateDetailTransaction(ctx context.Context, arg CreateDetailT
 		arg.Price,
 		arg.Subtotal,
 	)
-	var id pgtype.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i DetailTransaction
+	err := row.Scan(
+		&i.ID,
+		&i.IDTransaction,
+		&i.IDProduct,
+		&i.Qty,
+		&i.Price,
+		&i.Subtotal,
+	)
+	return i, err
 }
 
 const getDetailTransaction = `-- name: GetDetailTransaction :many

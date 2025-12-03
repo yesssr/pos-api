@@ -32,13 +32,15 @@ func main() {
 		panic(err);
 	}
 
+	xdt := configuration.NewXenditClient();
+
 	bucket := os.Getenv("BUCKET_NAME");
 	q := store.New(db);
-	s := service.New(q, awsClient, bucket);
+	s := service.New(q, awsClient, bucket, db, xdt);
 	h := handler.New(s);
 	r := router.New(h);
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("PORT");
 
 	fmt.Println("Starting server on port", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {

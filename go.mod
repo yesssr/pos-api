@@ -14,6 +14,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/joho/godotenv v1.5.1
+	github.com/xendit/xendit-go/v7 v7.0.0
 	golang.org/x/crypto v0.42.0
 )
 

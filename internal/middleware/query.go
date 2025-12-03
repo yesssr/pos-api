@@ -5,13 +5,16 @@ import (
 	"net/http"
 	"pos-api/internal/lib"
 	"strings"
+	"time"
 )
 
 type queryKey struct{};
 type QueryPayload struct {
-	Search string
-	OrderBy string
-	OrderDir string
+	Search string;
+	OrderBy string;
+	OrderDir string;
+	StartAt time.Time;
+	EndAt time.Time;
 }
 
 func QueryCtx(allowedCol map[string]bool) func(http.Handler) http.Handler {
@@ -21,6 +24,12 @@ func QueryCtx(allowedCol map[string]bool) func(http.Handler) http.Handler {
 			search := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("search")));
 			orderBy := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("order_by")));
 			orderDir := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("order_dir")));
+			startAtStr := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("start_at")));
+			endAtStr := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("end_at")));
+
+			now := time.Now();
+			startAt := now;
+			endAt := now;
 
 			if orderBy != "" {
 				if !allowedCol[orderBy] {
@@ -54,10 +63,34 @@ func QueryCtx(allowedCol map[string]bool) func(http.Handler) http.Handler {
 				return;
 			}
 
+			if startAtStr != "" && endAtStr != "" {
+				layout := "2006-01-02";
+				s, err := time.Parse(layout, startAtStr); if err != nil {
+					lib.SendErrorResponse(w, &lib.AppError{
+						Message:    "Invalid start_at parameter",
+						StatusCode: http.StatusBadRequest,
+					}, nil);
+					return;
+				}
+
+				e, err := time.Parse(layout, endAtStr); if err != nil {
+					lib.SendErrorResponse(w, &lib.AppError{
+						Message:    "Invalid end_at parameter",
+						StatusCode: http.StatusBadRequest,
+					}, nil);
+					return;
+				}
+
+				startAt = s;
+				endAt = e;
+			}
+
 			q := &QueryPayload{
 				Search:   search,
 				OrderBy:  orderBy,
 				OrderDir: orderDir,
+				StartAt:  startAt,
+				EndAt:    endAt,
 			}
 
 			ctx := context.WithValue(r.Context(), queryKey{}, q)

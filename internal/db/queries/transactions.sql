@@ -31,5 +31,13 @@ LIMIT $3 OFFSET $4;
 
 -- name: CountTransactions :one
 SELECT COUNT(*) AS count
-FROM transactions
-WHERE is_active = true;
+FROM transactions;
+
+-- name: UpdateTransactionStatus :one
+UPDATE transactions SET
+  payment_status = $2,
+  payment_method = $3,
+  id_transaction_gateway = $4,
+  updated_at = NOW()
+WHERE id = $1
+RETURNING *;

@@ -7,7 +7,7 @@ INSERT INTO detail_transactions (
   subtotal
 )
 VALUES ($1, $2, $3, $4, $5)
-RETURNING id;
+RETURNING *;
 
 -- name: GetDetailTransaction :many
 SELECT

@@ -14,7 +14,6 @@ import (
 const countTransactions = `-- name: CountTransactions :one
 SELECT COUNT(*) AS count
 FROM transactions
-WHERE is_active = true
 `
 
 func (q *Queries) CountTransactions(ctx context.Context) (int64, error) {
@@ -145,4 +144,44 @@ func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateTransactionStatus = `-- name: UpdateTransactionStatus :one
+UPDATE transactions SET
+  payment_status = $2,
+  payment_method = $3,
+  id_transaction_gateway = $4,
+  updated_at = NOW()
+WHERE id = $1
+RETURNING id, id_user, id_customer, date, total, payment_method, payment_status, id_transaction_gateway, created_at, updated_at
+`
+
+type UpdateTransactionStatusParams struct {
+	ID                   pgtype.UUID   `json:"id"`
+	PaymentStatus        PaymentStatus `json:"payment_status"`
+	PaymentMethod        PaymentMethod `json:"payment_method"`
+	IDTransactionGateway pgtype.Text   `json:"id_transaction_gateway"`
+}
+
+func (q *Queries) UpdateTransactionStatus(ctx context.Context, arg UpdateTransactionStatusParams) (Transaction, error) {
+	row := q.db.QueryRow(ctx, updateTransactionStatus,
+		arg.ID,
+		arg.PaymentStatus,
+		arg.PaymentMethod,
+		arg.IDTransactionGateway,
+	)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.IDUser,
+		&i.IDCustomer,
+		&i.Date,
+		&i.Total,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.IDTransactionGateway,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
