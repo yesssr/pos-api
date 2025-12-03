@@ -1,13 +1,11 @@
 package handler
 
 import (
-	"math/big"
 	"net/http"
 	"pos-api/internal/lib"
 	"pos-api/internal/middleware"
 	"pos-api/internal/service"
 	"strconv"
-	"strings"
 )
 
 type createProductInput struct {
@@ -54,8 +52,8 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return;
 	}
 
-	priceInt, ok := new(big.Int).SetString(strings.TrimSpace(b.Price), 10);
-	if !ok {
+	priceInt, err := strconv.ParseInt(priceStr, 10, 64);
+	if err != nil {
 		lib.SendErrorResponse(w, &lib.AppError{
 			Message:    "Invalid price format",
 			StatusCode: http.StatusBadRequest,
@@ -63,7 +61,7 @@ func (h *ProductHandler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		return;
 	}
 
-	p, err := h.s.CreateProduct(r, b.Name, priceInt, b.Stock)
+	p, err := h.s.CreateProduct(r, b.Name, int(priceInt), b.Stock)
 	if err != nil {
 		lib.SendErrorResponse(w, err, nil);
 		return;
@@ -118,13 +116,13 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	priceInt, ok := new(big.Int).SetString(strings.TrimSpace(b.Price), 10)
-	if !ok {
+	priceInt, err := strconv.ParseInt(priceStr, 10, 64);
+	if err != nil {
 		lib.SendErrorResponse(w, &lib.AppError{
 			Message:    "Invalid price format",
 			StatusCode: http.StatusBadRequest,
-		}, nil)
-		return
+		}, nil);
+		return;
 	}
 
 	isActive, err := strconv.ParseBool(b.IsActiveStr)
@@ -136,7 +134,7 @@ func (h *ProductHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pd, err := h.s.UpdateProduct(r, b.Name, priceInt, b.Stock, isActive, b.ImageUrl)
+	pd, err := h.s.UpdateProduct(r, b.Name, int(priceInt), b.Stock, isActive, b.ImageUrl)
 	if err != nil {
 		lib.SendErrorResponse(w, err, nil)
 		return

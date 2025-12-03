@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"net/http"
 	"path"
 	"pos-api/internal/lib"
@@ -33,7 +32,7 @@ func NewProductService(q *store.Queries, awsClient *s3.Client, bucket string, di
 func (s *ProductService) CreateProduct(
 	r *http.Request,
 	name string,
-	price *big.Int,
+	price int,
 	stock int32,
 ) (store.Product, error) {
 	ctx := r.Context()
@@ -96,7 +95,7 @@ func (s *ProductService) ListProducts(ctx context.Context, l, o int, oBy, oDir, 
 func (s *ProductService) UpdateProduct(
 	r *http.Request,
 	name string,
-	price *big.Int,
+	price int,
 	stock int32,
 	isActive bool,
 	submittedImgUrl string,
