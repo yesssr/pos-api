@@ -129,6 +129,26 @@ func (q *Queries) GetProduct(ctx context.Context, id pgtype.UUID) (GetProductRow
 	return i, err
 }
 
+const getProductForUpdate = `-- name: GetProductForUpdate :one
+SELECT id, name, stock
+FROM products
+WHERE id = $1
+FOR UPDATE
+`
+
+type GetProductForUpdateRow struct {
+	ID    pgtype.UUID `json:"id"`
+	Name  string      `json:"name"`
+	Stock int32       `json:"stock"`
+}
+
+func (q *Queries) GetProductForUpdate(ctx context.Context, id pgtype.UUID) (GetProductForUpdateRow, error) {
+	row := q.db.QueryRow(ctx, getProductForUpdate, id)
+	var i GetProductForUpdateRow
+	err := row.Scan(&i.ID, &i.Name, &i.Stock)
+	return i, err
+}
+
 const listProductsActive = `-- name: ListProductsActive :many
 SELECT
   id,
@@ -358,4 +378,24 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const updateProductStock = `-- name: UpdateProductStock :one
+UPDATE products SET
+  stock = $2,
+  updated_at = NOW()
+WHERE id = $1
+RETURNING id
+`
+
+type UpdateProductStockParams struct {
+	ID    pgtype.UUID `json:"id"`
+	Stock int32       `json:"stock"`
+}
+
+func (q *Queries) UpdateProductStock(ctx context.Context, arg UpdateProductStockParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateProductStock, arg.ID, arg.Stock)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }

@@ -80,3 +80,17 @@ SELECT COUNT(*) AS count
 FROM products
 WHERE is_active = TRUE
 AND name ILIKE '%' || $1 || '%';
+
+
+-- name: UpdateProductStock :one
+UPDATE products SET
+  stock = $2,
+  updated_at = NOW()
+WHERE id = $1
+RETURNING id;
+
+-- name: GetProductForUpdate :one
+SELECT id, name, stock
+FROM products
+WHERE id = $1
+FOR UPDATE;

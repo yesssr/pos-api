@@ -54,16 +54,31 @@ func(s *TransactionService) CreateTransaction(ctx context.Context, header store.
   }
 
   for _, d := range detail {
+  	p, e := qtx.GetProductForUpdate(ctx, d.IDProduct);
+   	if e != nil {
+    	return store.Transaction{}, nil, e;
+    }
+
+    if p.Stock < d.Qty {
+			return store.Transaction{}, nil, &lib.AppError{
+				Message: "Insufficient stock for product ID " + d.IDProduct.String(),
+				StatusCode: 400,
+			};
+	 	}
+
+		if _, err := qtx.UpdateProductStock(ctx, store.UpdateProductStockParams{
+			ID: d.IDProduct,
+			Stock: p.Stock - d.Qty,
+		}); err != nil {
+			return store.Transaction{}, nil, err;
+		}
+
  		d.IDTransaction = trx.ID;
    	_, err := qtx.CreateDetailTransaction(ctx, d);
     if err != nil {
     	return store.Transaction{}, nil, err;
     }
   }
-
- 	if err := tx.Commit(ctx);  err != nil {
- 		return store.Transaction{}, nil, err;
- 	}
 
   args := store.UpdateTransactionStatusParams{
 		ID: trx.ID,
@@ -74,33 +89,34 @@ func(s *TransactionService) CreateTransaction(ctx context.Context, header store.
 
   if header.PaymentMethod == "cash" {
   	args.PaymentStatus = "paid";
-  	t, err := s.q.UpdateTransactionStatus(ctx, args);
-   	if err != nil {
-	 		return store.Transaction{}, nil, err;
-	 	}
-		return t, nil, nil;
+  } else {
+  	args.PaymentStatus = "pending";
   }
 
-  amount := lib.NumericToFloat(trx.Total);
-  res, err := s.pay.CreateInvoice(ctx, trx.ID.String(), amount);
-
-  if err != nil {
+  t, err := qtx.UpdateTransactionStatus(ctx, args);
+	if err != nil {
 		return store.Transaction{}, nil, err;
 	}
 
-	invoiceUrl := res.GetInvoiceUrl();
-	args.PaymentStatus = "pending";
-	args.IDTransactionGateway = pgtype.Text{
-		String: res.GetId(),
-		Valid:  true,
-	};
-
-	t, err := s.q.UpdateTransactionStatus(ctx, args);
- 	if err != nil {
+ 	if err := tx.Commit(ctx);  err != nil {
  		return store.Transaction{}, nil, err;
  	}
 
-	trx = t;
+  var invoiceUrl string;
+  amount := lib.NumericToFloat(trx.Total);
+  if header.PaymentMethod != "cash" {
+	  res, err := s.pay.CreateInvoice(ctx, trx.ID.String(), amount);
+	  if err != nil {
+			return store.Transaction{}, nil, err;
+		}
+		invoiceUrl = res.GetInvoiceUrl();
+		args.IDTransactionGateway = pgtype.Text{
+			String: res.GetId(),
+			Valid:  true,
+		};
+		s.q.UpdateTransactionStatus(ctx, args);
+  }
 
+	trx = t;
   return trx, &invoiceUrl, nil;
 }
