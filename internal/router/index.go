@@ -34,7 +34,7 @@ func New(h *handler.Handler) chi.Router {
 			// Non-admin subgroup
 			r.Group(func(r chi.Router) {
 				r.Mount("/customers", CustomerRouter(h.Customer));
-				r.Post("transaction", h.Transaction.CreateTransaction);
+				r.Post("/ransaction", h.Transaction.CreateTransaction);
 			});
 
 			// Admin subgroup
