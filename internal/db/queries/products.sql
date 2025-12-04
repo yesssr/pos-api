@@ -90,7 +90,7 @@ WHERE id = $1
 RETURNING id;
 
 -- name: GetProductForUpdate :one
-SELECT id, name, stock
+SELECT id, name, stock, price
 FROM products
 WHERE id = $1
 FOR UPDATE;

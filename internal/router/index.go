@@ -49,13 +49,14 @@ func New(h *handler.Handler) chi.Router {
 			r.Group(func(r chi.Router) {
 				r.Mount("/customers", CustomerRouter(h.Customer));
 				r.With(lib.Paginate, middleware.QueryCtx(allowedProductsCols)).Get("/products-active", h.Product.ListProductsActive);
-				r.With(lib.Paginate, middleware.QueryCtx(allowedTrxCols)).Post("/transaction", h.Transaction.CreateTransaction);
+				r.Post("/cashier/transactions", h.Transaction.CreateTransaction);
+				r.Post("/webhooks/xendit", h.Transaction.WebHookXendit);
 			});
 
 			// Admin subgroup
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.IsAdmin);
-				r.Get("/transactions", h.Transaction.ListTransactions);
+				r.With(lib.Paginate, middleware.QueryCtx(allowedTrxCols)).Get("/transactions", h.Transaction.ListTransactions);
 				r.Mount("/users", UserRouter(h.User));
 				r.Mount("/products", ProductRouter(h.Product, allowedProductsCols));
 			});

@@ -148,16 +148,18 @@ UPDATE transactions SET
   payment_status = $2,
   payment_method = $3,
   id_transaction_gateway = $4,
+  total = $5,
   updated_at = NOW()
 WHERE id = $1
 RETURNING id, id_user, id_customer, date, total, payment_method, payment_status, id_transaction_gateway, created_at, updated_at
 `
 
 type UpdateTransactionStatusParams struct {
-	ID                   pgtype.UUID   `json:"id"`
-	PaymentStatus        PaymentStatus `json:"payment_status"`
-	PaymentMethod        PaymentMethod `json:"payment_method"`
-	IDTransactionGateway pgtype.Text   `json:"id_transaction_gateway"`
+	ID                   pgtype.UUID    `json:"id"`
+	PaymentStatus        PaymentStatus  `json:"payment_status"`
+	PaymentMethod        PaymentMethod  `json:"payment_method"`
+	IDTransactionGateway pgtype.Text    `json:"id_transaction_gateway"`
+	Total                pgtype.Numeric `json:"total"`
 }
 
 func (q *Queries) UpdateTransactionStatus(ctx context.Context, arg UpdateTransactionStatusParams) (Transaction, error) {
@@ -166,6 +168,7 @@ func (q *Queries) UpdateTransactionStatus(ctx context.Context, arg UpdateTransac
 		arg.PaymentStatus,
 		arg.PaymentMethod,
 		arg.IDTransactionGateway,
+		arg.Total,
 	)
 	var i Transaction
 	err := row.Scan(

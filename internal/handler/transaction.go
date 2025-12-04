@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"fmt"
+	"math/big"
 	"net/http"
 	"pos-api/internal/lib"
 	"pos-api/internal/middleware"
@@ -14,15 +16,17 @@ import (
 type Item struct {
 	IDProduct   string  	`json:"id_product" validate:"required,uuid4"`
 	Qty    int32    		  `json:"qty" validate:"required,gt=0"`
-	Price  int  		  		`json:"price" validate:"required,gt=0"`
-	Subtotal int 					`json:"subtotal" validate:"required,gt=0"`
 }
 
 type createTransactionInput struct {
 	IDCustomer           *string    		`json:"id_customer,omitempty" validate:"omitempty,uuid4"`
-	Total                int 						`json:"total" validate:"required,gt=0"`
 	PaymentMethod        string  				`json:"payment_method" validate:"required,oneof=cash qris credit debit"`
 	Items 							[]Item  				`json:"items" validate:"required,dive"`
+}
+
+type updateTransactionInput struct {
+	ID string 							`json:"id" validate:"required"`;
+	Status string 					`json:"status" validate:"required"`;
 }
 
 type TransactionHandler struct {
@@ -35,11 +39,11 @@ func NewTransactionHandler(s *service.TransactionService) *TransactionHandler {
 
 func(h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
 	b := &createTransactionInput{};
-	if !lib.ValidateJSON(w, r, &b) {
+	if !lib.ValidateJSON(w, r, b) {
 		return;
 	}
 
-	if err := lib.ValidateStruct(&b); err != nil {
+	if err := lib.ValidateStruct(b); err != nil {
 		lib.SendErrorResponse(w, err, b);
 		return;
 	}
@@ -59,7 +63,7 @@ func(h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Req
 	trxParams := store.CreateTransactionParams{
 		IDUser: pgtype.UUID{Bytes: userId, Valid: true},
 		IDCustomer: pgtype.UUID{Valid: false},
-		Total: *lib.IntToPgNumeric(b.Total),
+		Total: *lib.IntToPgNumeric(0),
 		PaymentMethod: store.PaymentMethod(b.PaymentMethod),
 		IDTransactionGateway: pgtype.Text{Valid: false},
 	}
@@ -84,8 +88,8 @@ func(h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Req
 			IDTransaction: pgtype.UUID{Valid: false},
 			IDProduct: pgtype.UUID{Bytes: productId, Valid: true},
 			Qty: item.Qty,
-			Price: *lib.IntToPgNumeric(item.Price),
-			Subtotal: *lib.IntToPgNumeric(item.Subtotal),
+			Price: pgtype.Numeric{Int: big.NewInt(0), Valid: false},
+			Subtotal: pgtype.Numeric{Int: big.NewInt(0), Valid: false},
 		})
 	}
 
@@ -114,4 +118,17 @@ func(h *TransactionHandler) ListTransactions(w http.ResponseWriter, r *http.Requ
 	}
 	p.TotalPages = &t;
 	lib.SendResponse(w, http.StatusOK, "List of transactions", list, p, nil);
+}
+
+func(h *TransactionHandler) WebHookXendit(w http.ResponseWriter, r *http.Request) {
+	b := &updateTransactionInput{};
+	if !lib.ValidateJSON(w, r, b) {
+		return;
+	}
+
+	if err := lib.ValidateStruct(b); err != nil {
+		lib.SendErrorResponse(w, err, b);
+		return;
+	}
+	fmt.Println(b);
 }

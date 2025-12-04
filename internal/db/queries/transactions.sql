@@ -37,6 +37,7 @@ UPDATE transactions SET
   payment_status = $2,
   payment_method = $3,
   id_transaction_gateway = $4,
+  total = $5,
   updated_at = NOW()
 WHERE id = $1
 RETURNING *;

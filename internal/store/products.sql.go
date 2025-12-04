@@ -130,22 +130,28 @@ func (q *Queries) GetProduct(ctx context.Context, id pgtype.UUID) (GetProductRow
 }
 
 const getProductForUpdate = `-- name: GetProductForUpdate :one
-SELECT id, name, stock
+SELECT id, name, stock, price
 FROM products
 WHERE id = $1
 FOR UPDATE
 `
 
 type GetProductForUpdateRow struct {
-	ID    pgtype.UUID `json:"id"`
-	Name  string      `json:"name"`
-	Stock int32       `json:"stock"`
+	ID    pgtype.UUID    `json:"id"`
+	Name  string         `json:"name"`
+	Stock int32          `json:"stock"`
+	Price pgtype.Numeric `json:"price"`
 }
 
 func (q *Queries) GetProductForUpdate(ctx context.Context, id pgtype.UUID) (GetProductForUpdateRow, error) {
 	row := q.db.QueryRow(ctx, getProductForUpdate, id)
 	var i GetProductForUpdateRow
-	err := row.Scan(&i.ID, &i.Name, &i.Stock)
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Stock,
+		&i.Price,
+	)
 	return i, err
 }
 

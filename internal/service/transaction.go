@@ -46,6 +46,7 @@ func(s *TransactionService) CreateTransaction(ctx context.Context, header store.
 	}
  	defer tx.Rollback(ctx);
 
+  total := 0;
   qtx := s.q.WithTx(tx);
 
   trx, err := qtx.CreateTransaction(ctx, header);
@@ -61,7 +62,7 @@ func(s *TransactionService) CreateTransaction(ctx context.Context, header store.
 
     if p.Stock < d.Qty {
 			return store.Transaction{}, nil, &lib.AppError{
-				Message: "Insufficient stock for product ID " + d.IDProduct.String(),
+				Message: "Stok product " + p.Name + " tidak cukup",
 				StatusCode: 400,
 			};
 	 	}
@@ -74,10 +75,17 @@ func(s *TransactionService) CreateTransaction(ctx context.Context, header store.
 		}
 
  		d.IDTransaction = trx.ID;
+   	d.Price = p.Price;
+    raw, _ := p.Price.Int64Value()
+    price := raw.Int64
+    subtotal := price * int64(d.Qty)
+
+    d.Subtotal = *lib.IntToPgNumeric(int(subtotal));
    	_, err := qtx.CreateDetailTransaction(ctx, d);
     if err != nil {
     	return store.Transaction{}, nil, err;
     }
+    total += int(subtotal);
   }
 
   args := store.UpdateTransactionStatusParams{
@@ -85,6 +93,7 @@ func(s *TransactionService) CreateTransaction(ctx context.Context, header store.
 		PaymentStatus: trx.PaymentStatus,
 		PaymentMethod: trx.PaymentMethod,
 		IDTransactionGateway: pgtype.Text{Valid: false},
+		Total: *lib.IntToPgNumeric(total),
 	};
 
   if header.PaymentMethod == "cash" {
@@ -103,9 +112,9 @@ func(s *TransactionService) CreateTransaction(ctx context.Context, header store.
  	}
 
   var invoiceUrl string;
-  amount := lib.NumericToFloat(trx.Total);
+  amount := lib.NumericToFloat(t.Total);
   if header.PaymentMethod != "cash" {
-	  res, err := s.pay.CreateInvoice(ctx, trx.ID.String(), amount);
+	  res, err := s.pay.CreateInvoice(ctx, t.ID.String(), amount);
 	  if err != nil {
 			return store.Transaction{}, nil, err;
 		}
@@ -114,7 +123,8 @@ func(s *TransactionService) CreateTransaction(ctx context.Context, header store.
 			String: res.GetId(),
 			Valid:  true,
 		};
-		s.q.UpdateTransactionStatus(ctx, args);
+		uTr, _ := s.q.UpdateTransactionStatus(ctx, args);
+		t = uTr;
   }
 
 	trx = t;
