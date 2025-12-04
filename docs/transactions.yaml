@@ -1,5 +1,5 @@
 paths:
-  /transaction:
+  /cashier/transactions:
     post:
       summary: Create a transaction
       description: Create a new transaction with header and detail items; returns the transaction and optional invoice URL if payment is non-cash
@@ -35,7 +35,7 @@ paths:
 
   /transactions:
     get:
-      summary: List transactions
+      summary: List transactions (Admin only)
       description: Get a paginated list of transactions within a date range (inclusive), ordered by date descending
       tags:
         - transactions
@@ -73,6 +73,76 @@ paths:
                 $ref: "#/components/schemas/TransactionListResponse"
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+
+  /list-sales:
+    get:
+      summary: List sales aggregated by period (Admin only)
+      description: Get sales data aggregated by day, week, month, or year within a date range
+      tags:
+        - transactions
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: period
+          required: true
+          schema:
+            type: string
+            enum: [day, week, month, year]
+          description: Aggregation period
+        - in: query
+          name: start_at
+          schema:
+            type: string
+            format: date
+          description: Start date (YYYY-MM-DD)
+        - in: query
+          name: end_at
+          schema:
+            type: string
+            format: date
+          description: End date (YYYY-MM-DD)
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Current page
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+          description: Items per page
+      responses:
+        "200":
+          description: Aggregated sales data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SalesListResponse"
+        "400":
+          description: Invalid period parameter
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
           content:
             application/json:
               schema:
@@ -202,6 +272,19 @@ components:
           type: string
           example: "cashier01"
 
+    SalesRow:
+      type: object
+      description: Sales data aggregated by period
+      properties:
+        name:
+          type: string
+          description: Period identifier (date for day/week, month for month, year for year)
+          example: "2025-01-01"
+        sales:
+          type: integer
+          description: Total sales amount for the period
+          example: 1500000
+
     GetDetailTransactionRow:
       type: object
       description: Detail transaction row with product name
@@ -316,5 +399,25 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ListTransactionsRow"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    SalesListResponse:
+      type: object
+      description: Success envelope returning aggregated sales data with pagination
+      properties:
+        success:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Sales data by period
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SalesRow"
         pagination:
           $ref: "#/components/schemas/Pagination"

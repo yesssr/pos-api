@@ -1,7 +1,7 @@
 paths:
   /users:
     post:
-      summary: Create a new user
+      summary: Create a new user (Admin only)
       description: Add a new user with username, password, and role
       tags:
         - users
@@ -32,8 +32,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     get:
-      summary: List users
+      summary: List users (Admin only)
       description: Get a paginated list of users with optional search
       tags:
         - users
@@ -68,6 +74,12 @@ paths:
             application/json:
               schema:
                 $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
 
   /users/{id}:
     parameters:
@@ -78,7 +90,7 @@ paths:
           type: string
         description: User ID
     get:
-      summary: Get user details
+      summary: Get user details (Admin only)
       description: Get a single user by ID
       tags:
         - users
@@ -97,6 +109,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: User not found
           content:
@@ -104,7 +122,7 @@ paths:
               schema:
                 $ref: "./auth.yaml#/components/schemas/ErrorResponse"
     put:
-      summary: Update a user
+      summary: Update a user (Admin only)
       description: Update a user's username, role, password, image_url, and is_active
       tags:
         - users
@@ -135,6 +153,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: User not found
           content:
@@ -142,7 +166,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     delete:
-      summary: Delete a user
+      summary: Delete a user (Admin only)
       description: Delete a user by ID
       tags:
         - users
@@ -161,6 +185,12 @@ paths:
             application/json:
               schema:
                 $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
         "404":
           description: User not found
           content:
@@ -170,7 +200,7 @@ paths:
 
   /users/count:
     get:
-      summary: Get total users
+      summary: Get total users (Admin only)
       description: Get the total count of users
       tags:
         - users
@@ -185,6 +215,12 @@ paths:
                 $ref: "#/components/schemas/UserCountResponse"
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
           content:
             application/json:
               schema:

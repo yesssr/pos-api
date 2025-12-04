@@ -7,9 +7,11 @@ servers:
   - url: /api/v1
 
 paths:
+  # Authentication routes
   /auth/login:
     $ref: "./auth.yaml#/paths/~1auth~1login"
 
+  # User management routes (Admin only)
   /users:
     $ref: "./users.yaml#/paths/~1users"
 
@@ -19,6 +21,7 @@ paths:
   /users/count:
     $ref: "./users.yaml#/paths/~1users~1count"
 
+  # Customer management routes
   /customers:
     $ref: "./customers.yaml#/paths/~1customers"
 
@@ -28,10 +31,9 @@ paths:
   /customers/count:
     $ref: "./customers.yaml#/paths/~1customers~1count"
 
+  # Product management routes
   /products:
     $ref: "./products.yaml#/paths/~1products"
-  /products-active:
-    $ref: "./products.yaml#/paths/~1products-active"
 
   /products/{id}:
     $ref: "./products.yaml#/paths/~1products~1{id}"
@@ -39,11 +41,18 @@ paths:
   /products/count:
     $ref: "./products.yaml#/paths/~1products~1count"
 
-  /transaction:
-    $ref: "./transactions.yaml#/paths/~1transaction"
+  /products-active:
+    $ref: "./products.yaml#/paths/~1products-active"
+
+  # Transaction routes
+  /cashier/transactions:
+    $ref: "./transactions.yaml#/paths/~1cashier~1transactions"
 
   /transactions:
     $ref: "./transactions.yaml#/paths/~1transactions"
+
+  /list-sales:
+    $ref: "./transactions.yaml#/paths/~1list-sales"
 
 components:
   securitySchemes:

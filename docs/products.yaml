@@ -1,7 +1,7 @@
 paths:
   /products:
     post:
-      summary: Create a new product
+      summary: Create a new product (Admin only)
       description: Add a new product with name, price, and stock
       tags:
         - products
@@ -33,7 +33,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     get:
-      summary: List products
+      summary: List products (Admin only)
       description: Get a paginated list of products with optional ordering and search
       tags:
         - products
@@ -81,11 +81,17 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /products-active:
     get:
       summary: List active products
-      description: Get a list of active products
+      description: Get a list of active products (available to all authenticated users)
       tags:
         - products
       security:
@@ -142,7 +148,7 @@ paths:
           type: string
         description: Product ID
     get:
-      summary: Get product details
+      summary: Get product details (Admin only)
       description: Get a single product by ID
       tags:
         - products
@@ -161,6 +167,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Product not found
           content:
@@ -168,7 +180,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     put:
-      summary: Update a product
+      summary: Update a product (Admin only)
       description: Update product name, price, stock, image_url, and is_active
       tags:
         - products
@@ -199,6 +211,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Product not found
           content:
@@ -206,7 +224,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
     delete:
-      summary: Delete a product
+      summary: Delete a product (Admin only)
       description: Delete a product by ID
       tags:
         - products
@@ -225,6 +243,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
         "404":
           description: Product not found
           content:
@@ -234,7 +258,7 @@ paths:
 
   /products/count:
     get:
-      summary: Get total products
+      summary: Get total products (Admin only)
       description: Get the total count of products
       tags:
         - products
@@ -249,6 +273,12 @@ paths:
                 $ref: "#/components/schemas/ProductCountResponse"
         "401":
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
           content:
             application/json:
               schema:
