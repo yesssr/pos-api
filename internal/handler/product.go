@@ -6,6 +6,8 @@ import (
 	"pos-api/internal/middleware"
 	"pos-api/internal/service"
 	"strconv"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type createProductInput struct {
@@ -85,10 +87,25 @@ func (h *ProductHandler) ListProducts(w http.ResponseWriter, r *http.Request) {
 	lib.SendResponse(w, http.StatusOK, "List of products", list, p, nil);
 }
 
+func (h *ProductHandler) ListProductsActive(w http.ResponseWriter, r *http.Request) {
+	p := lib.GetPagination(r);
+	q, _ := middleware.GetQueryFromCtx(r);
+	offset := (p.CurrentPage - 1) * p.PerPage;
+
+	list, totalPages, err := h.s.ListProductsActive(r.Context(), p.PerPage, offset, q.OrderBy, q.OrderDir, q.Search);
+	if err != nil {
+		lib.SendErrorResponse(w, err, nil);
+		return;
+	}
+
+	p.TotalPages = &totalPages;
+	lib.SendResponse(w, http.StatusOK, "List of products active", list, p, nil);
+}
+
 func (h *ProductHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	id, _ := middleware.GetIdFromCtx(r)
 	pd, err := h.s.GetProduct(r.Context(), id)
-	if err != nil {
+	if err != nil && err != pgx.ErrNoRows{
 		lib.SendErrorResponse(w, err, nil)
 		return
 	}
@@ -148,7 +165,7 @@ func (h *ProductHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	id, _ := middleware.GetIdFromCtx(r)
 
 	pd, err := h.s.DeleteProduct(ctx, id)
-	if err != nil {
+	if err != nil && err != pgx.ErrNoRows {
 		lib.SendErrorResponse(w, err, nil)
 		return
 	}

@@ -60,3 +60,23 @@ LIMIT $1 OFFSET $2;
 SELECT COUNT(*) AS count
 FROM products
 WHERE name ILIKE '%' || $1 || '%';
+
+-- name: ListProductsActive :many
+SELECT
+  id,
+  name,
+  price,
+  stock,
+  image_url,
+  is_active
+FROM products
+WHERE is_active = TRUE
+AND name ILIKE '%' || $4 || '%'
+ORDER BY $3 DESC
+LIMIT $1 OFFSET $2;
+
+-- name: CountProductsActive :one
+SELECT COUNT(*) AS count
+FROM products
+WHERE is_active = TRUE
+AND name ILIKE '%' || $1 || '%';

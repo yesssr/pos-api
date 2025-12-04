@@ -24,6 +24,20 @@ func (q *Queries) CountProducts(ctx context.Context, dollar_1 pgtype.Text) (int6
 	return count, err
 }
 
+const countProductsActive = `-- name: CountProductsActive :one
+SELECT COUNT(*) AS count
+FROM products
+WHERE is_active = TRUE
+AND name ILIKE '%' || $1 || '%'
+`
+
+func (q *Queries) CountProductsActive(ctx context.Context, dollar_1 pgtype.Text) (int64, error) {
+	row := q.db.QueryRow(ctx, countProductsActive, dollar_1)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createProduct = `-- name: CreateProduct :one
 INSERT INTO products (name, price, stock, image_url)
 VALUES ($1, $2, $3, $4)
@@ -113,6 +127,69 @@ func (q *Queries) GetProduct(ctx context.Context, id pgtype.UUID) (GetProductRow
 		&i.IsActive,
 	)
 	return i, err
+}
+
+const listProductsActive = `-- name: ListProductsActive :many
+SELECT
+  id,
+  name,
+  price,
+  stock,
+  image_url,
+  is_active
+FROM products
+WHERE is_active = TRUE
+AND name ILIKE '%' || $4 || '%'
+ORDER BY $3 DESC
+LIMIT $1 OFFSET $2
+`
+
+type ListProductsActiveParams struct {
+	Limit   int32       `json:"limit"`
+	Offset  int32       `json:"offset"`
+	Column3 interface{} `json:"column_3"`
+	Column4 pgtype.Text `json:"column_4"`
+}
+
+type ListProductsActiveRow struct {
+	ID       pgtype.UUID    `json:"id"`
+	Name     string         `json:"name"`
+	Price    pgtype.Numeric `json:"price"`
+	Stock    int32          `json:"stock"`
+	ImageUrl string         `json:"image_url"`
+	IsActive bool           `json:"is_active"`
+}
+
+func (q *Queries) ListProductsActive(ctx context.Context, arg ListProductsActiveParams) ([]ListProductsActiveRow, error) {
+	rows, err := q.db.Query(ctx, listProductsActive,
+		arg.Limit,
+		arg.Offset,
+		arg.Column3,
+		arg.Column4,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListProductsActiveRow
+	for rows.Next() {
+		var i ListProductsActiveRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Price,
+			&i.Stock,
+			&i.ImageUrl,
+			&i.IsActive,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listProductsAsc = `-- name: ListProductsAsc :many

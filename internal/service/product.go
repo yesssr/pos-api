@@ -92,6 +92,26 @@ func (s *ProductService) ListProducts(ctx context.Context, l, o int, oBy, oDir, 
 	return list, totalPages, nil;
 }
 
+func (s *ProductService) ListProductsActive(ctx context.Context, l, o int, oBy, oDir, search string,) ([]store.ListProductsActiveRow, int, error) {
+	args := store.ListProductsActiveParams{
+		Limit:  int32(l),
+		Offset: int32(o),
+		Column3: oBy,
+		Column4: pgtype.Text{String: search, Valid: true},
+	}
+
+	list, err := s.q.ListProductsActive(ctx, args);
+	if err != nil {
+		return nil, 0, err;
+	}
+
+	c, _ := s.q.CountProductsActive(ctx, pgtype.Text{String: search, Valid: true});
+	t := int(c);
+
+	totalPages := lib.GetTotalPages(t, l);
+	return list, totalPages, nil;
+}
+
 func (s *ProductService) UpdateProduct(
 	r *http.Request,
 	name string,
