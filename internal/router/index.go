@@ -62,7 +62,7 @@ func New(h *handler.Handler) chi.Router {
 				r.With(lib.Paginate, middleware.QueryCtx(map[string]bool{}, map[string]bool{})).
 					Get("/transactions", h.Transaction.ListTransactions);
 				r.With(lib.Paginate, middleware.QueryCtx(map[string]bool{}, allowedPeriod)).
-					Get("/list-sales", h.Transaction.ListTransactions);
+					Get("/list-sales", h.Transaction.SalesByPeriods);
 				r.Mount("/users", UserRouter(h.User));
 				r.Mount("/products", ProductRouter(h.Product, allowedProductsCols));
 			});

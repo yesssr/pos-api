@@ -151,3 +151,15 @@ func(h *TransactionHandler) WebHookXendit(w http.ResponseWriter, r *http.Request
 	});
 	w.WriteHeader(http.StatusOK);
 }
+
+func (h *TransactionHandler) SalesByPeriods(w http.ResponseWriter, r *http.Request) {
+	q, _ := middleware.GetQueryFromCtx(r);
+
+	list, err := h.s.ListSalesByPeriods(r.Context(), q.Period, q.StartAt, q.EndAt);
+	if err != nil {
+		lib.SendErrorResponse(w, err, nil);
+		return;
+	}
+
+	lib.SendResponse(w, http.StatusOK, "Sales report", list, nil, nil);
+}
