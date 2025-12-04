@@ -5,7 +5,7 @@ CREATE TABLE transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   id_user UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   id_customer UUID REFERENCES customers(id) ON DELETE SET NULL,
-  date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  date DATE DEFAULT NOW(),
   total NUMERIC(12,2) NOT NULL,
   payment_method payment_method NOT NULL DEFAULT 'cash',
   payment_status payment_status NOT NULL DEFAULT 'pending',

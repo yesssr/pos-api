@@ -172,7 +172,7 @@ type Transaction struct {
 	ID                   pgtype.UUID        `json:"id"`
 	IDUser               pgtype.UUID        `json:"id_user"`
 	IDCustomer           pgtype.UUID        `json:"id_customer"`
-	Date                 pgtype.Timestamptz `json:"date"`
+	Date                 pgtype.Date        `json:"date"`
 	Total                pgtype.Numeric     `json:"total"`
 	PaymentMethod        PaymentMethod      `json:"payment_method"`
 	PaymentStatus        PaymentStatus      `json:"payment_status"`
