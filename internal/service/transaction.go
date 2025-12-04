@@ -21,7 +21,7 @@ func NewTransactionService(q *store.Queries, dbx *pgxpool.Pool, pay *PaymentServ
 	return &TransactionService{q: q, dbx: dbx, pay: pay};
 }
 
-func(s *TransactionService) ListTransactions(ctx context.Context, start, end time.Time, l, o int) ([]store.ListTransactionsRow, error) {
+func(s *TransactionService) ListTransactions(ctx context.Context, start, end time.Time, l, o int) ([]store.ListTransactionsRow, int, error) {
 	p := store.ListTransactionsParams{
 		Date: pgtype.Timestamptz{Time: start, Valid: true},
 		Date_2: pgtype.Timestamptz{Time: end, Valid: true},
@@ -30,9 +30,13 @@ func(s *TransactionService) ListTransactions(ctx context.Context, start, end tim
 	}
 	list, err := s.q.ListTransactions(ctx, p);
 	if err != nil {
-		return []store.ListTransactionsRow{}, err;
+		return []store.ListTransactionsRow{}, 0, err;
 	}
-	return list, nil;
+	c, _ := s.q.CountTransactions(ctx);
+	t := int(c);
+
+	totalPages := lib.GetTotalPages(t, l);
+	return list, totalPages, nil;
 }
 
 func(s *TransactionService) CreateTransaction(ctx context.Context, header store.CreateTransactionParams, detail []store.CreateDetailTransactionParams) (store.Transaction, *string, error) {

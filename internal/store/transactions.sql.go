@@ -29,10 +29,9 @@ INSERT INTO transactions (
   id_customer,
   total,
   payment_method,
-  payment_status,
   id_transaction_gateway
 )
-VALUES ($1, $2, $3, $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id, id_user, id_customer, date, total, payment_method, payment_status, id_transaction_gateway, created_at, updated_at
 `
 
@@ -41,7 +40,6 @@ type CreateTransactionParams struct {
 	IDCustomer           pgtype.UUID    `json:"id_customer"`
 	Total                pgtype.Numeric `json:"total"`
 	PaymentMethod        PaymentMethod  `json:"payment_method"`
-	PaymentStatus        PaymentStatus  `json:"payment_status"`
 	IDTransactionGateway pgtype.Text    `json:"id_transaction_gateway"`
 }
 
@@ -51,7 +49,6 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.IDCustomer,
 		arg.Total,
 		arg.PaymentMethod,
-		arg.PaymentStatus,
 		arg.IDTransactionGateway,
 	)
 	var i Transaction

@@ -22,7 +22,7 @@ type createTransactionInput struct {
 	IDCustomer           *string    		`json:"id_customer,omitempty" validate:"omitempty,uuid4"`
 	Total                int 						`json:"total" validate:"required,gt=0"`
 	PaymentMethod        string  				`json:"payment_method" validate:"required,oneof=cash qris credit debit"`
-	Items 							[]Item  				`json:"items" validate:"required,dive,required"`
+	Items 							[]Item  				`json:"items" validate:"required,dive"`
 }
 
 type TransactionHandler struct {
@@ -34,7 +34,7 @@ func NewTransactionHandler(s *service.TransactionService) *TransactionHandler {
 }
 
 func(h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
-	var b createTransactionInput;
+	b := &createTransactionInput{};
 	if !lib.ValidateJSON(w, r, &b) {
 		return;
 	}
@@ -61,7 +61,6 @@ func(h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Req
 		IDCustomer: pgtype.UUID{Valid: false},
 		Total: *lib.IntToPgNumeric(b.Total),
 		PaymentMethod: store.PaymentMethod(b.PaymentMethod),
-		PaymentStatus: store.PaymentStatus("pending"),
 		IDTransactionGateway: pgtype.Text{Valid: false},
 	}
 
@@ -101,4 +100,18 @@ func(h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Req
 		"transaction": trx,
 	}
 	lib.SendResponse(w, http.StatusCreated, "Successfully created transaction", res, nil, nil);
+}
+
+func(h *TransactionHandler) ListTransactions(w http.ResponseWriter, r *http.Request) {
+	q, _ := middleware.GetQueryFromCtx(r);
+	p := lib.GetPagination(r);
+	offset := (p.CurrentPage - 1) * p.PerPage;
+
+	list, t, err := h.s.ListTransactions(r.Context(), q.StartAt, q.EndAt, p.PerPage, offset);
+	if err != nil {
+		lib.SendErrorResponse(w, err, nil);
+		return;
+	}
+	p.TotalPages = &t;
+	lib.SendResponse(w, http.StatusOK, "List of transactions", list, p, nil);
 }
