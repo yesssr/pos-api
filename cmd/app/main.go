@@ -33,10 +33,11 @@ func main() {
 	}
 
 	xdt := configuration.NewXenditClient();
+	hub := configuration.NewHub();
 
 	bucket := os.Getenv("BUCKET_NAME");
 	q := store.New(db);
-	s := service.New(q, awsClient, bucket, db, xdt);
+	s := service.New(q, awsClient, bucket, db, xdt, hub);
 	h := handler.New(s);
 	r := router.New(h);
 

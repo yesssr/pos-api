@@ -41,3 +41,10 @@ UPDATE transactions SET
   updated_at = NOW()
 WHERE id = $1
 RETURNING *;
+
+-- name: UpdateStatusByPaymentId :one
+UPDATE transactions SET
+  payment_status = $2,
+  updated_at = NOW()
+WHERE id_transaction_gateway = $1
+RETURNING *;

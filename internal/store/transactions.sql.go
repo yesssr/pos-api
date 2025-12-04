@@ -88,23 +88,23 @@ LIMIT $3 OFFSET $4
 `
 
 type ListTransactionsParams struct {
-	Date   pgtype.Timestamptz `json:"date"`
-	Date_2 pgtype.Timestamptz `json:"date_2"`
-	Limit  int32              `json:"limit"`
-	Offset int32              `json:"offset"`
+	Date   pgtype.Date `json:"date"`
+	Date_2 pgtype.Date `json:"date_2"`
+	Limit  int32       `json:"limit"`
+	Offset int32       `json:"offset"`
 }
 
 type ListTransactionsRow struct {
-	ID                   pgtype.UUID        `json:"id"`
-	IDUser               pgtype.UUID        `json:"id_user"`
-	IDCustomer           pgtype.UUID        `json:"id_customer"`
-	Total                pgtype.Numeric     `json:"total"`
-	Date                 pgtype.Timestamptz `json:"date"`
-	PaymentMethod        PaymentMethod      `json:"payment_method"`
-	PaymentStatus        PaymentStatus      `json:"payment_status"`
-	IDTransactionGateway pgtype.Text        `json:"id_transaction_gateway"`
-	CustomerName         pgtype.Text        `json:"customer_name"`
-	Cashier              string             `json:"cashier"`
+	ID                   pgtype.UUID    `json:"id"`
+	IDUser               pgtype.UUID    `json:"id_user"`
+	IDCustomer           pgtype.UUID    `json:"id_customer"`
+	Total                pgtype.Numeric `json:"total"`
+	Date                 pgtype.Date    `json:"date"`
+	PaymentMethod        PaymentMethod  `json:"payment_method"`
+	PaymentStatus        PaymentStatus  `json:"payment_status"`
+	IDTransactionGateway pgtype.Text    `json:"id_transaction_gateway"`
+	CustomerName         pgtype.Text    `json:"customer_name"`
+	Cashier              string         `json:"cashier"`
 }
 
 func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]ListTransactionsRow, error) {
@@ -141,6 +141,37 @@ func (q *Queries) ListTransactions(ctx context.Context, arg ListTransactionsPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateStatusByPaymentId = `-- name: UpdateStatusByPaymentId :one
+UPDATE transactions SET
+  payment_status = $2,
+  updated_at = NOW()
+WHERE id_transaction_gateway = $1
+RETURNING id, id_user, id_customer, date, total, payment_method, payment_status, id_transaction_gateway, created_at, updated_at
+`
+
+type UpdateStatusByPaymentIdParams struct {
+	IDTransactionGateway pgtype.Text   `json:"id_transaction_gateway"`
+	PaymentStatus        PaymentStatus `json:"payment_status"`
+}
+
+func (q *Queries) UpdateStatusByPaymentId(ctx context.Context, arg UpdateStatusByPaymentIdParams) (Transaction, error) {
+	row := q.db.QueryRow(ctx, updateStatusByPaymentId, arg.IDTransactionGateway, arg.PaymentStatus)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.IDUser,
+		&i.IDCustomer,
+		&i.Date,
+		&i.Total,
+		&i.PaymentMethod,
+		&i.PaymentStatus,
+		&i.IDTransactionGateway,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateTransactionStatus = `-- name: UpdateTransactionStatus :one

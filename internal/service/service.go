@@ -1,6 +1,7 @@
 package service
 
 import (
+	"pos-api/internal/configuration"
 	"pos-api/internal/store"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -15,9 +16,10 @@ type Service struct {
 	CustomerService *CustomerService;
 	TransactionService *TransactionService;
 	Payment *PaymentService;
+	Ws *configuration.Hub;
 }
 
-func New(q *store.Queries, awsClient *s3.Client, bucket string, dbx *pgxpool.Pool, x *xendit.APIClient) *Service {
+func New(q *store.Queries, awsClient *s3.Client, bucket string, dbx *pgxpool.Pool, x *xendit.APIClient, ws *configuration.Hub) *Service {
 	pay := NewPaymentService(x);
 	return &Service{
 		AuthService: NewAuthService(q),

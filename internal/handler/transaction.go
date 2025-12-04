@@ -1,13 +1,14 @@
 package handler
 
 import (
-	"fmt"
 	"math/big"
 	"net/http"
+	"pos-api/internal/configuration"
 	"pos-api/internal/lib"
 	"pos-api/internal/middleware"
 	"pos-api/internal/service"
 	"pos-api/internal/store"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -31,10 +32,11 @@ type updateTransactionInput struct {
 
 type TransactionHandler struct {
 	s *service.TransactionService;
+	ws *configuration.Hub;
 }
 
-func NewTransactionHandler(s *service.TransactionService) *TransactionHandler {
-	return &TransactionHandler{s: s}
+func NewTransactionHandler(s *service.TransactionService, ws *configuration.Hub) *TransactionHandler {
+	return &TransactionHandler{s: s, ws: ws};
 }
 
 func(h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +118,7 @@ func(h *TransactionHandler) ListTransactions(w http.ResponseWriter, r *http.Requ
 		lib.SendErrorResponse(w, err, nil);
 		return;
 	}
+
 	p.TotalPages = &t;
 	lib.SendResponse(w, http.StatusOK, "List of transactions", list, p, nil);
 }
@@ -130,5 +133,21 @@ func(h *TransactionHandler) WebHookXendit(w http.ResponseWriter, r *http.Request
 		lib.SendErrorResponse(w, err, b);
 		return;
 	}
-	fmt.Println(b);
+	args := store.UpdateStatusByPaymentIdParams{
+		IDTransactionGateway: pgtype.Text{String: b.ID, Valid: true},
+		PaymentStatus:store.PaymentStatus(strings.ToLower(b.Status)),
+	}
+	trx, err := h.s.UpdateTrxStatus(r.Context(), args);
+	if err != nil {
+		h.ws.NotifyUser(trx.IDUser.String(), map[string]any{
+			"type": "transaction_update",
+			"error": err.Error(),
+		});
+		return;
+	}
+	h.ws.NotifyUser(trx.IDUser.String(), map[string]any{
+		"type": "transaction_update",
+		"data": trx,
+	});
+	w.WriteHeader(http.StatusOK);
 }

@@ -18,6 +18,6 @@ func New(s *service.Service) *Handler {
 		User: NewUserHandler(s.UserService),
 		Product: NewProductHandler(s.ProductService),
 		Customer: NewCustomerHandler(s.CustomerService),
-		Transaction: NewTransactionHandler(s.TransactionService),
+		Transaction: NewTransactionHandler(s.TransactionService, s.Ws),
 	}
 }

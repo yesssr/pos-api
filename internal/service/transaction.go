@@ -23,8 +23,8 @@ func NewTransactionService(q *store.Queries, dbx *pgxpool.Pool, pay *PaymentServ
 
 func(s *TransactionService) ListTransactions(ctx context.Context, start, end time.Time, l, o int) ([]store.ListTransactionsRow, int, error) {
 	p := store.ListTransactionsParams{
-		Date: pgtype.Timestamptz{Time: start, Valid: true},
-		Date_2: pgtype.Timestamptz{Time: end, Valid: true},
+		Date: pgtype.Date{Time: start, Valid: true},
+		Date_2: pgtype.Date{Time: end, Valid: true},
 		Limit: int32(l),
 		Offset: int32(o),
 	}
@@ -129,4 +129,12 @@ func(s *TransactionService) CreateTransaction(ctx context.Context, header store.
 
 	trx = t;
   return trx, &invoiceUrl, nil;
+}
+
+func (s *TransactionService) UpdateTrxStatus(ctx context.Context, args store.UpdateStatusByPaymentIdParams) (store.Transaction, error) {
+	trx, err := s.q.UpdateStatusByPaymentId(ctx, args);
+	if err != nil {
+		return store.Transaction{}, err;
+	}
+	return trx, nil;
 }
