@@ -13,7 +13,7 @@ type Service struct {
 	UserService *UserService;
 	ProductService *ProductService;
 	CustomerService *CustomerService;
-	Transaction *TransactionService;
+	TransactionService *TransactionService;
 	Payment *PaymentService;
 }
 
@@ -25,6 +25,6 @@ func New(q *store.Queries, awsClient *s3.Client, bucket string, dbx *pgxpool.Poo
 		ProductService: NewProductService(q, awsClient, bucket, "products"),
 		CustomerService: NewCustomerService(q),
 		Payment: pay,
-		Transaction: NewTransactionService(q, dbx, pay),
+		TransactionService: NewTransactionService(q, dbx, pay),
 	}
 }
