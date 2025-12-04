@@ -46,14 +46,14 @@ paths:
           name: start_at
           schema:
             type: string
-            format: date-time
-          description: Start date-time (inclusive)
+            format: date
+          description: Start date (YYYY-MM-DD)
         - in: query
           name: end_at
           schema:
             type: string
-            format: date-time
-          description: End date-time (inclusive)
+            format: date
+          description: End date (YYYY-MM-DD)
         - in: query
           name: page
           schema:
@@ -106,8 +106,8 @@ components:
       enum:
         - cash
         - qris
+        - credit
         - debit
-        - kredit
       example: cash
 
     PaymentStatus:
@@ -245,19 +245,9 @@ components:
           type: integer
           minimum: 1
           example: 2
-        price:
-          type: integer
-          minimum: 1
-          example: 100000
-        subtotal:
-          type: integer
-          minimum: 1
-          example: 200000
       required:
         - id_product
         - qty
-        - price
-        - subtotal
 
     CreateTransactionInput:
       type: object
@@ -269,11 +259,6 @@ components:
           nullable: true
           description: Optional customer ID
           example: 33333333-3333-3333-3333-333333333333
-        total:
-          type: integer
-          minimum: 1
-          description: Total transaction amount as integer
-          example: 250000
         payment_method:
           type: string
           description: One of cash, qris, credit, debit
@@ -288,7 +273,6 @@ components:
           items:
             $ref: "#/components/schemas/Item"
       required:
-        - total
         - payment_method
         - items
 

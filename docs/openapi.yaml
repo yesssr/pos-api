@@ -25,6 +25,9 @@ paths:
   /customers/{id}:
     $ref: "./customers.yaml#/paths/~1customers~1{id}"
 
+  /customers/count:
+    $ref: "./customers.yaml#/paths/~1customers~1count"
+
   /products:
     $ref: "./products.yaml#/paths/~1products"
   /products-active:

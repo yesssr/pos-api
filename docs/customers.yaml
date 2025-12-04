@@ -51,6 +51,19 @@ paths:
             type: integer
           description: Items per page
         - in: query
+          name: order_by
+          schema:
+            type: string
+          description: Order by field
+        - in: query
+          name: order_dir
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          description: Order direction
+        - in: query
           name: search
           schema:
             type: string
@@ -163,6 +176,28 @@ paths:
                 $ref: "./auth.yaml#/components/schemas/ErrorResponse"
         "404":
           description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+
+  /customers/count:
+    get:
+      summary: Get total customers
+      description: Get the total count of customers
+      tags:
+        - customers
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Total customers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerCountResponse"
+        "401":
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -288,4 +323,21 @@ components:
             $ref: "#/components/schemas/Customer"
         pagination:
           $ref: "#/components/schemas/Pagination"
+
+    CustomerCountResponse:
+      type: object
+      description: Success envelope returning total customer count
+      properties:
+        success:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Total customers
+        data:
+          type: integer
+          example: 17
 # ErrorResponse schema removed to avoid duplicate keys; use shared reference in responses: ./auth.yaml#/components/schemas/ErrorResponse
