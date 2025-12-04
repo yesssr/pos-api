@@ -34,12 +34,14 @@ func New(h *handler.Handler) chi.Router {
 			// Non-admin subgroup
 			r.Group(func(r chi.Router) {
 				r.Mount("/customers", CustomerRouter(h.Customer));
+				r.Get("/products/active", h.Product.ListProductsActive);
 				r.Post("/transaction", h.Transaction.CreateTransaction);
 			});
 
 			// Admin subgroup
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.IsAdmin);
+				r.Get("/transactions", h.Transaction.ListTransactions);
 				r.Mount("/users", UserRouter(h.User));
 				r.Mount("/products", ProductRouter(h.Product));
 			});
