@@ -24,5 +24,6 @@ func CustomerRouter(h *handler.CustomerHandler) http.Handler {
 		r.Put("/", h.UpdateCustomer);
 		r.Delete("/", h.DeleteCustomer);
 	});
+	r.Get("/count", h.GetTotalCustomer);
 	return r;
 }

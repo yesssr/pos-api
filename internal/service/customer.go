@@ -70,3 +70,11 @@ func(s *CustomerService) DeleteCustomer(ctx context.Context, id pgtype.UUID) (st
 	}
 	return c, nil;
 }
+
+func (s *CustomerService) GetTotalCustomer(ctx context.Context) (int, error) {
+	t, err := s.q.CountCustomers(ctx, pgtype.Text{Valid: true});
+	if err != nil {
+		return 0, err;
+	}
+	return int(t), nil;
+}

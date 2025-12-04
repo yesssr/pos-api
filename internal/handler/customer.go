@@ -122,3 +122,12 @@ func (h *CustomerHandler) DeleteCustomer(w http.ResponseWriter, r *http.Request)
 
 	lib.SendResponse(w, http.StatusOK, "Successfully deleted customer", c, nil, nil);
 }
+
+func (h *CustomerHandler) GetTotalCustomer(w http.ResponseWriter, r *http.Request) {
+	t, err := h.s.GetTotalCustomer(r.Context());
+	if err != nil {
+		lib.SendErrorResponse(w, err, nil);
+		return;
+	}
+	lib.SendResponse(w, http.StatusOK, "Total customers", t, nil, nil);
+}
