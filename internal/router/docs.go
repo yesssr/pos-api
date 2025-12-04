@@ -56,6 +56,10 @@ func DocsRouter() http.Handler {
 			w.Header().Set("Content-Type", "application/yaml; charset=utf-8");
 			http.ServeFile(w, r, "docs/products.yaml");
 		});
+		r.Get("/transactions.yaml", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/yaml; charset=utf-8");
+			http.ServeFile(w, r, "docs/transactions.yaml");
+		});
 	});
 
 	return r;
