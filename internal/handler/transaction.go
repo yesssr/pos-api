@@ -9,6 +9,7 @@ import (
 	"pos-api/internal/service"
 	"pos-api/internal/store"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -62,12 +63,16 @@ func(h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Req
 		return;
 	}
 
+	jakarta, _ := time.LoadLocation("Asia/Jakarta");
+	t := time.Now().In(jakarta);
+
 	trxParams := store.CreateTransactionParams{
 		IDUser: pgtype.UUID{Bytes: userId, Valid: true},
 		IDCustomer: pgtype.UUID{Valid: false},
 		Total: *lib.IntToPgNumeric(0),
 		PaymentMethod: store.PaymentMethod(b.PaymentMethod),
 		IDTransactionGateway: pgtype.Text{Valid: false},
+		Date: pgtype.Date{Time: t, Valid: true},
 	}
 
 	if b.IDCustomer != nil {
@@ -86,6 +91,7 @@ func(h *TransactionHandler) CreateTransaction(w http.ResponseWriter, r *http.Req
 			lib.SendErrorResponse(w, err, nil);
 			return;
 		}
+
 		items = append(items, store.CreateDetailTransactionParams{
 			IDTransaction: pgtype.UUID{Valid: false},
 			IDProduct: pgtype.UUID{Bytes: productId, Valid: true},

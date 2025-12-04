@@ -4,9 +4,10 @@ INSERT INTO transactions (
   id_customer,
   total,
   payment_method,
-  id_transaction_gateway
+  id_transaction_gateway,
+  date
 )
-VALUES ($1, $2, $3, $4, $5)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: ListTransactions :many

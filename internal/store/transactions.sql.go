@@ -29,9 +29,10 @@ INSERT INTO transactions (
   id_customer,
   total,
   payment_method,
-  id_transaction_gateway
+  id_transaction_gateway,
+  date
 )
-VALUES ($1, $2, $3, $4, $5)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, id_user, id_customer, date, total, payment_method, payment_status, id_transaction_gateway, created_at, updated_at
 `
 
@@ -41,6 +42,7 @@ type CreateTransactionParams struct {
 	Total                pgtype.Numeric `json:"total"`
 	PaymentMethod        PaymentMethod  `json:"payment_method"`
 	IDTransactionGateway pgtype.Text    `json:"id_transaction_gateway"`
+	Date                 pgtype.Date    `json:"date"`
 }
 
 func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {
@@ -50,6 +52,7 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 		arg.Total,
 		arg.PaymentMethod,
 		arg.IDTransactionGateway,
+		arg.Date,
 	)
 	var i Transaction
 	err := row.Scan(
