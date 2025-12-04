@@ -7,6 +7,8 @@ import (
 	"pos-api/internal/service"
 	"pos-api/internal/store"
 	"strconv"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type createUserInput struct {
@@ -74,7 +76,7 @@ func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	id, _ := middleware.GetIdFromCtx(r);
 	u, err := h.s.GetUserById(r.Context(), id);
-	if err != nil {
+	if err != nil && err != pgx.ErrNoRows {
 		lib.SendErrorResponse(w, err, nil);
 		return;
 	}
@@ -120,7 +122,7 @@ func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	id, _ := middleware.GetIdFromCtx(r);
 
 	u, err := h.s.DeleteUser(ctx, id);
-	if err != nil {
+	if err != nil && err != pgx.ErrNoRows {
 		lib.SendErrorResponse(w, err, nil);
 		return;
 	}

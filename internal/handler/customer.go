@@ -5,6 +5,8 @@ import (
 	"pos-api/internal/lib"
 	"pos-api/internal/middleware"
 	"pos-api/internal/service"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type CustomerHandler struct {
@@ -71,7 +73,7 @@ func (h *CustomerHandler) GetCustomer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c, err := h.s.GetCustomerByID(r.Context(), id);
-	if err != nil {
+	if err != nil && err != pgx.ErrNoRows {
 		lib.SendErrorResponse(w, err, nil);
 		return;
 	}
@@ -86,12 +88,12 @@ func (h *CustomerHandler) UpdateCustomer(w http.ResponseWriter, r *http.Request)
 		return;
 	}
 
-	var b updateCustomerInput;
-	if !lib.ValidateJSON(w, r, &b) {
+	b := &updateCustomerInput{};
+	if !lib.ValidateJSON(w, r, b) {
 		return;
 	}
 
-	if err := lib.ValidateStruct(&b); err != nil {
+	if err := lib.ValidateStruct(b); err != nil {
 		lib.SendErrorResponse(w, err, b);
 		return;
 	}
@@ -113,7 +115,7 @@ func (h *CustomerHandler) DeleteCustomer(w http.ResponseWriter, r *http.Request)
 	}
 
 	c, err := h.s.DeleteCustomer(r.Context(), id);
-	if err != nil {
+	if err != nil && err != pgx.ErrNoRows {
 		lib.SendErrorResponse(w, err, nil);
 		return;
 	}
