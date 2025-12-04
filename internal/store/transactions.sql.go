@@ -67,6 +67,166 @@ func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionPa
 	return i, err
 }
 
+const listSalesPerDay = `-- name: ListSalesPerDay :many
+SELECT
+  TO_CHAR(date_trunc('day', date), 'YYYY-MM-DD') AS name,
+  SUM(total) AS sales
+FROM transactions
+WHERE date >= $1 AND date < $2
+GROUP BY date_trunc('day', date)
+ORDER BY name
+`
+
+type ListSalesPerDayParams struct {
+	Date   pgtype.Date `json:"date"`
+	Date_2 pgtype.Date `json:"date_2"`
+}
+
+type ListSalesPerDayRow struct {
+	Name  string `json:"name"`
+	Sales int64  `json:"sales"`
+}
+
+func (q *Queries) ListSalesPerDay(ctx context.Context, arg ListSalesPerDayParams) ([]ListSalesPerDayRow, error) {
+	rows, err := q.db.Query(ctx, listSalesPerDay, arg.Date, arg.Date_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListSalesPerDayRow
+	for rows.Next() {
+		var i ListSalesPerDayRow
+		if err := rows.Scan(&i.Name, &i.Sales); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSalesPerMonth = `-- name: ListSalesPerMonth :many
+SELECT
+  TO_CHAR(date_trunc('month', date), 'YYYY-MM') AS name,
+  SUM(total) AS sales
+FROM transactions
+WHERE date >= $1 AND date < $2
+GROUP BY date_trunc('month', date)
+ORDER BY name
+`
+
+type ListSalesPerMonthParams struct {
+	Date   pgtype.Date `json:"date"`
+	Date_2 pgtype.Date `json:"date_2"`
+}
+
+type ListSalesPerMonthRow struct {
+	Name  string `json:"name"`
+	Sales int64  `json:"sales"`
+}
+
+func (q *Queries) ListSalesPerMonth(ctx context.Context, arg ListSalesPerMonthParams) ([]ListSalesPerMonthRow, error) {
+	rows, err := q.db.Query(ctx, listSalesPerMonth, arg.Date, arg.Date_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListSalesPerMonthRow
+	for rows.Next() {
+		var i ListSalesPerMonthRow
+		if err := rows.Scan(&i.Name, &i.Sales); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSalesPerWeek = `-- name: ListSalesPerWeek :many
+SELECT
+  TO_CHAR(date_trunc('week', date), 'YYYY-MM-DD') AS name,
+  SUM(total) AS sales
+FROM transactions
+WHERE date >= $1 AND date < $2
+GROUP BY date_trunc('week', date)
+ORDER BY name
+`
+
+type ListSalesPerWeekParams struct {
+	Date   pgtype.Date `json:"date"`
+	Date_2 pgtype.Date `json:"date_2"`
+}
+
+type ListSalesPerWeekRow struct {
+	Name  string `json:"name"`
+	Sales int64  `json:"sales"`
+}
+
+func (q *Queries) ListSalesPerWeek(ctx context.Context, arg ListSalesPerWeekParams) ([]ListSalesPerWeekRow, error) {
+	rows, err := q.db.Query(ctx, listSalesPerWeek, arg.Date, arg.Date_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListSalesPerWeekRow
+	for rows.Next() {
+		var i ListSalesPerWeekRow
+		if err := rows.Scan(&i.Name, &i.Sales); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSalesPerYear = `-- name: ListSalesPerYear :many
+SELECT
+  TO_CHAR(date, 'YYYY') AS name,
+  SUM(total) AS sales
+FROM transactions
+WHERE date >= $1 AND date < $2
+GROUP BY TO_CHAR(date, 'YYYY')
+ORDER BY name
+`
+
+type ListSalesPerYearParams struct {
+	Date   pgtype.Date `json:"date"`
+	Date_2 pgtype.Date `json:"date_2"`
+}
+
+type ListSalesPerYearRow struct {
+	Name  string `json:"name"`
+	Sales int64  `json:"sales"`
+}
+
+func (q *Queries) ListSalesPerYear(ctx context.Context, arg ListSalesPerYearParams) ([]ListSalesPerYearRow, error) {
+	rows, err := q.db.Query(ctx, listSalesPerYear, arg.Date, arg.Date_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListSalesPerYearRow
+	for rows.Next() {
+		var i ListSalesPerYearRow
+		if err := rows.Scan(&i.Name, &i.Sales); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTransactions = `-- name: ListTransactions :many
 SELECT
   t.id,

@@ -138,3 +138,51 @@ func (s *TransactionService) UpdateTrxStatus(ctx context.Context, args store.Upd
 	}
 	return trx, nil;
 }
+
+func (s *TransactionService) ListSalesByPeriods(ctx context.Context, period string, start, end time.Time) (any, error) {
+	var list any;
+	switch period {
+	case "day":
+		d, err := s.q.ListSalesPerDay(ctx, store.ListSalesPerDayParams{
+			Date: pgtype.Date{Time: start, Valid: true},
+			Date_2: pgtype.Date{Time: end, Valid: true},
+		});
+		if err != nil {
+			return nil, err;
+		}
+		list = d;
+	case "week":
+		d, err := s.q.ListSalesPerWeek(ctx, store.ListSalesPerWeekParams{
+			Date: pgtype.Date{Time: start, Valid: true},
+			Date_2: pgtype.Date{Time: end, Valid: true},
+		});
+		if err != nil {
+			return nil, err;
+		}
+		list = d;
+	case "month":
+		m, err := s.q.ListSalesPerMonth(ctx, store.ListSalesPerMonthParams{
+			Date: pgtype.Date{Time: start, Valid: true},
+			Date_2: pgtype.Date{Time: end, Valid: true},
+		});
+		if err != nil {
+			return nil, err;
+		}
+		list = m;
+	case "year":
+		y, err := s.q.ListSalesPerYear(ctx, store.ListSalesPerYearParams{
+			Date: pgtype.Date{Time: start, Valid: true},
+			Date_2: pgtype.Date{Time: end, Valid: true},
+		});
+		if err != nil {
+			return nil, err;
+		}
+		list = y;
+	default:
+		return nil, &lib.AppError{
+			Message: "Invalid period",
+			StatusCode: 400,
+		};
+	}
+	return list, nil;
+}
