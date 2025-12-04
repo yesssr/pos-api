@@ -34,6 +34,12 @@ paths:
   /products/count:
     $ref: "./products.yaml#/paths/~1products~1count"
 
+  /transaction:
+    $ref: "./transactions.yaml#/paths/~1transaction"
+
+  /transactions:
+    $ref: "./transactions.yaml#/paths/~1transactions"
+
 components:
   securitySchemes:
     BearerAuth:

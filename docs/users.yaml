@@ -25,7 +25,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
           content:
@@ -67,7 +67,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
 
   /users/{id}:
     parameters:
@@ -102,7 +102,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
     put:
       summary: Update a user
       description: Update a user's username, role, password, image_url, and is_active
@@ -160,7 +160,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
         "404":
           description: User not found
           content:
@@ -265,20 +265,7 @@ components:
           type: integer
           example: 17
 
-    ErrorResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: false
-        status_code:
-          type: integer
-          example: 400
-        message:
-          type: string
-          example: Validation error
-        data:
-          nullable: true
+    # ErrorResponse schema removed to avoid duplication; use auth.yaml reference in responses
 
     Roles:
       type: string

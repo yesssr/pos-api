@@ -31,7 +31,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
     get:
       summary: List customers
       description: Get a paginated list of customers with optional search
@@ -67,7 +67,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
 
   /customers/{id}:
     parameters:
@@ -96,7 +96,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
         "404":
           description: Customer not found
           content:
@@ -128,19 +128,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
         "401":
           description: Unauthorized
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
         "404":
           description: Customer not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
     delete:
       summary: Delete a customer
       description: Delete a customer by ID
@@ -160,13 +160,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
         "404":
           description: Customer not found
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
 
 components:
   securitySchemes:
@@ -288,18 +288,4 @@ components:
             $ref: "#/components/schemas/Customer"
         pagination:
           $ref: "#/components/schemas/Pagination"
-
-    ErrorResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: false
-        status_code:
-          type: integer
-          example: 400
-        message:
-          type: string
-          example: Validation error
-        data:
-          nullable: true
+# ErrorResponse schema removed to avoid duplicate keys; use shared reference in responses: ./auth.yaml#/components/schemas/ErrorResponse
