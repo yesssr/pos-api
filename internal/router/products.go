@@ -10,15 +10,8 @@ import (
 	"pos-api/internal/middleware"
 )
 
-func ProductRouter(h *handler.ProductHandler) http.Handler {
+func ProductRouter(h *handler.ProductHandler, allowedCols map[string]bool) http.Handler {
 	r := chi.NewRouter();
- 	allowedCols := map[string]bool{
-   	"name":   		true,
-    "price":      true,
-    "stock":      true,
-    "created_at": true,
-    "updated_at": true,
-  }
 
 	r.Post("/", h.CreateProduct);
 	r.With(lib.Paginate, middleware.QueryCtx(allowedCols)).Get("/", h.ListProducts);

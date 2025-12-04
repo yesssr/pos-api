@@ -27,6 +27,8 @@ paths:
 
   /products:
     $ref: "./products.yaml#/paths/~1products"
+  /products-active:
+    $ref: "./products.yaml#/paths/~1products-active"
 
   /products/{id}:
     $ref: "./products.yaml#/paths/~1products~1{id}"

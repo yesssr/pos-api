@@ -82,6 +82,57 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /products-active:
+    get:
+      summary: List active products
+      description: Get a list of active products
+      tags:
+        - products
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Current page
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+          description: Items per page
+        - in: query
+          name: order_by
+          schema:
+            type: string
+          description: Order by field
+        - in: query
+          name: order_dir
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          description: Order direction
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: Search query
+      responses:
+        "200":
+          description: List of active products
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /products/{id}:
     parameters:
       - in: path

@@ -2,6 +2,7 @@ package router
 
 import (
 	"pos-api/internal/handler"
+	"pos-api/internal/lib"
 	"pos-api/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
@@ -16,6 +17,19 @@ func New(h *handler.Handler) chi.Router {
     AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
     AllowedHeaders: []string{"Accept", "Authorization", "Content-Type"},
 	}));
+
+	allowedProductsCols := map[string]bool{
+   	"name":   		true,
+    "price":      true,
+    "stock":      true,
+    "created_at": true,
+    "updated_at": true,
+  }
+
+	allowedTrxCols := map[string]bool{
+    "created_at": true,
+    "updated_at": true,
+  }
 
 	r.Route("/api/v1", func(r chi.Router) {
 		// Public routes
@@ -34,8 +48,8 @@ func New(h *handler.Handler) chi.Router {
 			// Non-admin subgroup
 			r.Group(func(r chi.Router) {
 				r.Mount("/customers", CustomerRouter(h.Customer));
-				r.Get("/products/active", h.Product.ListProductsActive);
-				r.Post("/transaction", h.Transaction.CreateTransaction);
+				r.With(lib.Paginate, middleware.QueryCtx(allowedProductsCols)).Get("/products-active", h.Product.ListProductsActive);
+				r.With(lib.Paginate, middleware.QueryCtx(allowedTrxCols)).Post("/transaction", h.Transaction.CreateTransaction);
 			});
 
 			// Admin subgroup
@@ -43,7 +57,7 @@ func New(h *handler.Handler) chi.Router {
 				r.Use(middleware.IsAdmin);
 				r.Get("/transactions", h.Transaction.ListTransactions);
 				r.Mount("/users", UserRouter(h.User));
-				r.Mount("/products", ProductRouter(h.Product));
+				r.Mount("/products", ProductRouter(h.Product, allowedProductsCols));
 			});
 
 		});
