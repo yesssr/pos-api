@@ -37,7 +37,8 @@ func New(h *handler.Handler) chi.Router {
 			// Docs
 			r.Mount("/docs", DocsRouter());
 			r.Post("/auth/login", h.Auth.Login);
-		})
+			r.Post("/webhooks/xendit", h.Transaction.WebHookXendit);
+		});
 
 		// Protected routes
 		r.Group(func(r chi.Router) {
@@ -50,7 +51,6 @@ func New(h *handler.Handler) chi.Router {
 				r.Mount("/customers", CustomerRouter(h.Customer));
 				r.With(lib.Paginate, middleware.QueryCtx(allowedProductsCols)).Get("/products-active", h.Product.ListProductsActive);
 				r.Post("/cashier/transactions", h.Transaction.CreateTransaction);
-				r.Post("/webhooks/xendit", h.Transaction.WebHookXendit);
 			});
 
 			// Admin subgroup
