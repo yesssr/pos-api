@@ -17,7 +17,7 @@ func CustomerRouter(h *handler.CustomerHandler) http.Handler {
   }
 
 	r.Post("/", h.CreateCustomer);
-	r.With(middleware.QueryCtx(allowedCols), lib.Paginate).Get("/", h.ListCustomers);
+	r.With(middleware.QueryCtx(allowedCols, map[string]bool{}), lib.Paginate).Get("/", h.ListCustomers);
 	r.Route("/{id}", func(r chi.Router) {
 		r.Use(middleware.IdCtx);
 		r.Get("/", h.GetCustomer);

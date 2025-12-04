@@ -14,7 +14,7 @@ func ProductRouter(h *handler.ProductHandler, allowedCols map[string]bool) http.
 	r := chi.NewRouter();
 
 	r.Post("/", h.CreateProduct);
-	r.With(lib.Paginate, middleware.QueryCtx(allowedCols)).Get("/", h.ListProducts);
+	r.With(lib.Paginate, middleware.QueryCtx(allowedCols, map[string]bool{})).Get("/", h.ListProducts);
 	r.Route("/{id}", func(r chi.Router) {
 		r.Use(middleware.IdCtx);
 		r.Get("/", h.GetProduct);

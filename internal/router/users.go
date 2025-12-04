@@ -20,7 +20,7 @@ func UserRouter(h *handler.UserHandler) http.Handler {
   }
 
   r.Post("/", h.CreateUser);
-  r.With(middleware.QueryCtx(allowedCols), lib.Paginate).Get("/", h.ListUsers);
+  r.With(middleware.QueryCtx(allowedCols, map[string]bool{}), lib.Paginate).Get("/", h.ListUsers);
   r.Route("/{id}", func(r chi.Router) {
   	r.Use(middleware.IdCtx);
    	r.Get("/", h.GetUser);
