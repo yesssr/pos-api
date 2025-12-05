@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -168,4 +169,14 @@ func (h *TransactionHandler) SalesByPeriods(w http.ResponseWriter, r *http.Reque
 	}
 
 	lib.SendResponse(w, http.StatusOK, "Sales report", list, nil, nil);
+}
+
+func (h *TransactionHandler) GetDetailTransactions(w http.ResponseWriter, r *http.Request) {
+	id, _ := middleware.GetIdFromCtx(r);
+	details, err := h.s.GetDetailTransactionByID(r.Context(), id);
+	if err != nil && err != pgx.ErrNoRows {
+		lib.SendErrorResponse(w, err, nil);
+		return;
+	}
+	lib.SendResponse(w, http.StatusOK, "Detail transactions", details, nil, nil);
 }

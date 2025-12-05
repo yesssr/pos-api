@@ -186,3 +186,11 @@ func (s *TransactionService) ListSalesByPeriods(ctx context.Context, period stri
 	}
 	return list, nil;
 }
+
+func (s *TransactionService) GetDetailTransactionByID(ctx context.Context, id pgtype.UUID) ([]store.GetDetailTransactionRow, error) {
+	list, err := s.q.GetDetailTransaction(ctx, id);
+	if err != nil {
+		return []store.GetDetailTransactionRow{}, err;
+	}
+	return list, nil;
+}
