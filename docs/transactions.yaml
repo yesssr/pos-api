@@ -84,6 +84,48 @@ paths:
               schema:
                 $ref: "./auth.yaml#/components/schemas/ErrorResponse"
 
+  /transactions/{id}/details:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Transaction ID
+    get:
+      summary: Get transaction details (Admin only)
+      description: Get detailed information for a specific transaction including line items
+      tags:
+        - transactions
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Transaction details with line items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionDetailsResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+        "404":
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: "./auth.yaml#/components/schemas/ErrorResponse"
+
   /list-sales:
     get:
       summary: List sales aggregated by period (Admin only)
@@ -95,11 +137,11 @@ paths:
       parameters:
         - in: query
           name: period
-          required: true
           schema:
             type: string
             enum: [day, week, month, year]
-          description: Aggregation period
+            default: day
+          description: Aggregation period (defaults to 'day')
         - in: query
           name: start_at
           schema:
@@ -112,23 +154,13 @@ paths:
             type: string
             format: date
           description: End date (YYYY-MM-DD)
-        - in: query
-          name: page
-          schema:
-            type: integer
-          description: Current page
-        - in: query
-          name: per_page
-          schema:
-            type: integer
-          description: Items per page
       responses:
         "200":
           description: Aggregated sales data
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SalesListResponse"
+                $ref: "#/components/schemas/SalesReportResponse"
         "400":
           description: Invalid period parameter
           content:
@@ -402,9 +434,9 @@ components:
         pagination:
           $ref: "#/components/schemas/Pagination"
 
-    SalesListResponse:
+    TransactionDetailsResponse:
       type: object
-      description: Success envelope returning aggregated sales data with pagination
+      description: Success envelope returning transaction details with line items
       properties:
         success:
           type: boolean
@@ -414,10 +446,26 @@ components:
           example: 200
         message:
           type: string
-          example: Sales data by period
+          example: Detail transactions
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/GetDetailTransactionRow"
+
+    SalesReportResponse:
+      type: object
+      description: Success envelope returning aggregated sales data
+      properties:
+        success:
+          type: boolean
+          example: true
+        status_code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Sales report
         data:
           type: array
           items:
             $ref: "#/components/schemas/SalesRow"
-        pagination:
-          $ref: "#/components/schemas/Pagination"

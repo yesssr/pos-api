@@ -51,6 +51,9 @@ paths:
   /transactions:
     $ref: "./transactions.yaml#/paths/~1transactions"
 
+  /transactions/{id}/details:
+    $ref: "./transactions.yaml#/paths/~1transactions~1{id}~1details"
+
   /list-sales:
     $ref: "./transactions.yaml#/paths/~1list-sales"
 
