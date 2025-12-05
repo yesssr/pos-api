@@ -55,7 +55,7 @@ SELECT
   TO_CHAR(date_trunc('day', date), 'YYYY-MM-DD') AS name,
   SUM(total) AS sales
 FROM transactions
-WHERE date >= $1 AND date < $2
+WHERE date >= $1 AND date <= $2
 GROUP BY date_trunc('day', date)
 ORDER BY name;
 
@@ -64,7 +64,7 @@ SELECT
   TO_CHAR(date_trunc('week', date), 'YYYY-MM-DD') AS name,
   SUM(total) AS sales
 FROM transactions
-WHERE date >= $1 AND date < $2
+WHERE date >= $1 AND date <= $2
 GROUP BY date_trunc('week', date)
 ORDER BY name;
 
@@ -73,7 +73,7 @@ SELECT
   TO_CHAR(date_trunc('month', date), 'YYYY-MM') AS name,
   SUM(total) AS sales
 FROM transactions
-WHERE date >= $1 AND date < $2
+WHERE date >= $1 AND date <= $2
 GROUP BY date_trunc('month', date)
 ORDER BY name;
 
@@ -82,6 +82,6 @@ SELECT
   TO_CHAR(date, 'YYYY') AS name,
   SUM(total) AS sales
 FROM transactions
-WHERE date >= $1 AND date < $2
+WHERE date >= $1 AND date <= $2
 GROUP BY TO_CHAR(date, 'YYYY')
 ORDER BY name;

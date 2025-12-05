@@ -31,8 +31,8 @@ func QueryCtx(allowedCol, allowedPer map[string]bool) func(http.Handler) http.Ha
 
 			jakarta, _ := time.LoadLocation("Asia/Jakarta");
 			t := time.Now().In(jakarta);
-			startAt := t;
-			endAt := startAt.AddDate(0, 0, 7);
+			endAt := t;
+			startAt := endAt.AddDate(0, 0, -7);
 
 			if orderBy != "" {
 				if !allowedCol[orderBy] {
