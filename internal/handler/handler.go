@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"pos-api/internal/configuration"
 	"pos-api/internal/service"
 )
 
@@ -10,6 +11,7 @@ type Handler struct {
 	Product *ProductHandler;
 	Customer *CustomerHandler;
 	Transaction *TransactionHandler;
+	Websocket *configuration.Hub;
 }
 
 func New(s *service.Service) *Handler {
@@ -19,5 +21,6 @@ func New(s *service.Service) *Handler {
 		Product: NewProductHandler(s.ProductService),
 		Customer: NewCustomerHandler(s.CustomerService),
 		Transaction: NewTransactionHandler(s.TransactionService, s.Ws),
+		Websocket: s.Ws,
 	}
 }

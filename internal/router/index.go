@@ -33,6 +33,8 @@ func New(h *handler.Handler) chi.Router {
     "year": true,
   }
 
+  r.Get("/ws", h.Websocket.WSHandler);
+
 	r.Route("/api/v1", func(r chi.Router) {
 		// Public routes
 		r.Group(func(r chi.Router) {
