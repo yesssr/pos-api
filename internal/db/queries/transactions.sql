@@ -26,7 +26,7 @@ FROM transactions t
 LEFT JOIN customers c ON t.id_customer = c.id
 JOIN users u ON t.id_user = u.id
 WHERE date BETWEEN $1 AND $2
-ORDER BY t.date DESC
+ORDER BY t.created_at DESC
 LIMIT $3 OFFSET $4;
 
 -- name: CountTransactions :one
